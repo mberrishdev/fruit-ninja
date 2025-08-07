@@ -14,26 +14,37 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Get('fruits/stats')
-  getFruitStats() {
-    return this.fruitWorker.getFruitStats();
-  }
-
-  @Post('fruits/speed/global')
-  setGlobalSpeed(@Body() body: { multiplier: number }) {
-    this.fruitWorker.setGlobalSpeedMultiplier(body.multiplier);
-    return { message: `Global speed multiplier set to ${body.multiplier}` };
-  }
-
-  @Post('fruits/speed/boost')
-  boostFruitType(@Body() body: { fruitName: string; multiplier: number }) {
-    const count = this.fruitWorker.boostFruitType(
-      body.fruitName,
-      body.multiplier,
-    );
+  @Get('health')
+  getHealth() {
+    const now = new Date();
+    const uptime = process.uptime();
+    const memoryUsage = process.memoryUsage();
+    
     return {
-      message: `Boosted ${count} ${body.fruitName} fruits by ${body.multiplier}x`,
-      boostedCount: count
+      status: 'ok',
+      timestamp: now.toISOString(),
+      uptime: `${Math.floor(uptime / 60)}m ${Math.floor(uptime % 60)}s`,
+      uptimeSeconds: uptime,
+      memory: {
+        rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
+        heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
+        heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
+        external: `${Math.round(memoryUsage.external / 1024 / 1024)}MB`,
+      },
+      environment: process.env.NODE_ENV || 'development',
+      nodeVersion: process.version,
+      platform: process.platform,
+      game: {
+        activeFruits: this.fruitWorker.getFruitStats().totalFruits,
+        gameStatus: 'running',
+        lastUpdate: now.toISOString()
+      },
+      endpoints: {
+        websocket: 'ws://localhost:3000',
+        api: 'http://localhost:3000',
+        health: 'http://localhost:3000/health',
+        stats: 'http://localhost:3000/fruits/stats'
+      }
     };
   }
 }
