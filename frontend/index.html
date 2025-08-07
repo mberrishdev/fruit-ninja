@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Ninja - Live Matrix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a2e;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #gameContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #connectionStatus {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        
+        .connected {
+            color: #4CAF50;
+        }
+        
+        .disconnected {
+            color: #f44336;
+        }
+        
+        #stats {
+            position: absolute;
+            top: 50px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div id="connectionStatus" class="disconnected">Disconnected</div>
+    <div id="stats">
+        <div>Fruits: <span id="fruitCount">0</span></div>
+        <div>FPS: <span id="fps">0</span></div>
+    </div>
+    <div id="gameContainer"></div>
+
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    
+    <script>
+        class FruitNinjaRenderer {
+            constructor() {
+                this.MATRIX_SIZE = 100;
+                this.CELL_SIZE = 5;
+                this.FRUIT_RADIUS = 2;
+                
+                // Fruit symbol mapping based on backend fruit types
+                this.fruitSymbols = new Map([
+                    ['Apple', '🍎'],
+                    ['Orange', '🍊'], 
+                    ['Banana', '🍌'],
+                    ['Cherry', '🍒'],
+                    ['Watermelon', '🍉'],
+                    ['Grape', '🍇'],
+                    ['Strawberry', '🍓'],
+                    ['Pineapple', '🍍'],
+                    ['Peach', '🍑'],
+                    ['default', '🍎'] // Fallback
+                ]);
+                
+                // Fruit color mapping for backgrounds
+                this.fruitColors = new Map([
+                    ['Apple', 0xFF6B6B],
+                    ['Orange', 0xFFA500],
+                    ['Banana', 0xFFFF00],
+                    ['Cherry', 0xDC143C],
+                    ['Watermelon', 0x00FF00],
+                    ['Grape', 0x9932CC],
+                    ['Strawberry', 0xFF69B4],
+                    ['Pineapple', 0xFFD700],
+                    ['Peach', 0xFFCBA4],
+                    ['default', 0xFF6B6B]
+                ]);
+                
+                this.app = null;
+                this.graphics = null;
+                this.textContainer = null;
+                this.socket = null;
+                this.currentMatrix = null;
+                this.fruitCount = 0;
+                this.fruitData = new Map(); // Store fruit data by ID
+                
+                // Performance tracking
+                this.lastFrameTime = performance.now();
+                this.frameCount = 0;
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupPixi();
+                this.setupWebSocket();
+                this.setupEventListeners();
+                this.startRenderLoop();
+            }
+            
+            setupPixi() {
+                // Create Pixi application with options
+                this.app = new PIXI.Application({
+                    width: this.MATRIX_SIZE * this.CELL_SIZE,
+                    height: this.MATRIX_SIZE * this.CELL_SIZE,
+                    backgroundColor: 0x0f0f23,
+                    antialias: true,
+                    resolution: window.devicePixelRatio || 1,
+                    autoDensity: true,
+                });
+                
+                // Add canvas to DOM
+                document.getElementById('gameContainer').appendChild(this.app.view);
+                
+                // Create graphics object for drawing
+                this.graphics = new PIXI.Graphics();
+                this.app.stage.addChild(this.graphics);
+                
+                // Create a container for text
+                this.textContainer = new PIXI.Container();
+                this.app.stage.addChild(this.textContainer);
+                
+                // Handle resize
+                this.handleResize();
+            }
+            
+            setupWebSocket() {
+                this.socket = io('ws://localhost:3000', {
+                    transports: ['websocket'],
+                    upgrade: false
+                });
+                
+                console.log('setupWebSocket');
+                this.socket.on('connect', () => {
+                    console.log('Connected to WebSocket server');
+                    this.updateConnectionStatus(true);
+                });
+                
+                this.socket.on('disconnect', () => {
+                    console.log('Disconnected from WebSocket server');
+                    this.updateConnectionStatus(false);
+                });
+                
+                this.socket.on('matrix:update', (data) => {
+                    if (data.matrix) {
+                        this.currentMatrix = data.matrix;
+                        // Store fruit data if provided
+                        if (data.fruits) {
+                            this.fruitData.clear();
+                            data.fruits.forEach(fruit => {
+                                this.fruitData.set(fruit.id, fruit);
+                            });
+                        }
+                        this.renderMatrix();
+                    } else {
+                        // Handle legacy format (just matrix)
+                        this.currentMatrix = data;
+                        this.renderMatrix();
+                    }
+                });
+                
+                this.socket.on('connect_error', (error) => {
+                    console.error('Connection error:', error);
+                    this.updateConnectionStatus(false);
+                });
+            }
+            
+            setupEventListeners() {
+                window.addEventListener('resize', () => this.handleResize());
+            }
+            
+            handleResize() {
+                if (!this.app) return;
+                
+                const container = document.getElementById('gameContainer');
+                const containerRect = container.getBoundingClientRect();
+                
+                // Calculate scale to fit matrix in viewport while maintaining aspect ratio
+                const matrixPixelWidth = this.MATRIX_SIZE * this.CELL_SIZE;
+                const matrixPixelHeight = this.MATRIX_SIZE * this.CELL_SIZE;
+                
+                const scaleX = (containerRect.width * 0.9) / matrixPixelWidth;
+                const scaleY = (containerRect.height * 0.9) / matrixPixelHeight;
+                const scale = Math.min(scaleX, scaleY, 3); // Max scale of 3x
+                
+                // Apply scale to the stage
+                this.app.stage.scale.set(scale);
+                
+                // Center the stage
+                this.app.stage.position.set(
+                    (containerRect.width - matrixPixelWidth * scale) / 2,
+                    (containerRect.height - matrixPixelHeight * scale) / 2
+                );
+            }
+            
+            renderMatrix() {
+                if (!this.currentMatrix || !this.graphics) return;
+                
+                // Clear previous frame
+                this.graphics.clear();
+                this.textContainer.removeChildren();
+                this.fruitCount = 0;
+                
+                // Draw grid background (optional)
+                this.drawGrid();
+                
+                // Render each cell
+                for (let y = 0; y < this.MATRIX_SIZE; y++) {
+                    for (let x = 0; x < this.MATRIX_SIZE; x++) {
+                        const cell = this.currentMatrix[y][x];
+                        
+                        if (cell !== 0) {
+                            this.drawFruit(x, y, cell);
+                            this.fruitCount++;
+                        }
+                    }
+                }
+                
+                // Update stats
+                document.getElementById('fruitCount').textContent = this.fruitCount;
+            }
+            
+            drawGrid() {
+                // Draw subtle grid lines
+                this.graphics.lineStyle(0.2, 0x333333, 0.3);
+                
+                // Vertical lines
+                for (let x = 0; x <= this.MATRIX_SIZE; x++) {
+                    this.graphics.moveTo(x * this.CELL_SIZE, 0);
+                    this.graphics.lineTo(x * this.CELL_SIZE, this.MATRIX_SIZE * this.CELL_SIZE);
+                }
+                
+                // Horizontal lines
+                for (let y = 0; y <= this.MATRIX_SIZE; y++) {
+                    this.graphics.moveTo(0, y * this.CELL_SIZE);
+                    this.graphics.lineTo(this.MATRIX_SIZE * this.CELL_SIZE, y * this.CELL_SIZE);
+                }
+            }
+            
+            drawFruit(x, y, fruitId) {
+                // Get fruit data if available
+                const fruitData = this.fruitData.get(fruitId);
+                const fruitName = fruitData ? fruitData.name : 'default';
+                
+                // Get fruit symbol and color
+                console.log('Rendering fruit:', fruitName, 'Data:', fruitData);
+                const symbol = this.fruitSymbols.get(fruitName) || this.fruitSymbols.get('default');
+                const color = this.fruitColors.get(fruitName) || this.fruitColors.get('default');
+                
+                // Calculate pixel position (center of cell)
+                const pixelX = (x * this.CELL_SIZE) + (this.CELL_SIZE / 2);
+                const pixelY = (y * this.CELL_SIZE) + (this.CELL_SIZE / 2);
+                
+                // Skip background circle for now to see symbols clearly
+                // this.graphics.beginFill(color, 0.3);
+                // this.graphics.drawCircle(pixelX, pixelY, this.FRUIT_RADIUS + 0.5);
+                // this.graphics.endFill();
+                
+                // Create text for fruit symbol with better settings
+                const text = new PIXI.Text(symbol, {
+                    fontFamily: 'Arial, sans-serif',
+                    fontSize: Math.max(8, this.CELL_SIZE * 1.2), // Larger font
+                    fill: 0xFFFFFF,
+                    stroke: 0x000000,
+                    strokeThickness: 1,
+                    align: 'center',
+                });
+                
+                // Center the text
+                text.anchor.set(0.5);
+                text.x = pixelX;
+                text.y = pixelY;
+                
+                this.textContainer.addChild(text);
+                
+                console.log('Added text:', symbol, 'at', pixelX, pixelY);
+            }
+            
+            getFruitColor(fruitId) {
+                // Simple color mapping based on fruit ID
+                // You can enhance this to map actual fruit types from backend
+                const hash = this.hashString(fruitId);
+                const colors = Array.from(this.fruitColors.values());
+                return colors[hash % colors.length];
+            }
+            
+            hashString(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32-bit integer
+                }
+                return Math.abs(hash);
+            }
+            
+            updateConnectionStatus(connected) {
+                const statusElement = document.getElementById('connectionStatus');
+                if (connected) {
+                    statusElement.textContent = 'Connected';
+                    statusElement.className = 'connected';
+                } else {
+                    statusElement.textContent = 'Disconnected';
+                    statusElement.className = 'disconnected';
+                }
+            }
+            
+            startRenderLoop() {
+                // FPS counter
+                setInterval(() => {
+                    const now = performance.now();
+                    const fps = Math.round(1000 / (now - this.lastFrameTime));
+                    document.getElementById('fps').textContent = fps;
+                    this.lastFrameTime = now;
+                }, 1000);
+            }
+        }
+        
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const renderer = new FruitNinjaRenderer();
+        });
+        
+        // Handle page visibility for performance
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // Pause or reduce updates when tab is not visible
+                console.log('Page hidden - could reduce update frequency');
+            } else {
+                console.log('Page visible - resume normal updates');
+            }
+        });
+    </script>
+</body>
+</html> 
