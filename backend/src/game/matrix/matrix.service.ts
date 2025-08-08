@@ -50,7 +50,8 @@ export class MatrixService {
   }
 
   isInBounds(x: number, y: number): boolean {
-    return x >= 0 && y >= 0 && x < this.size && y < this.size;
+    // Add padding (10 units) to all sides for boundary check
+    return x >= 10 && y >= -10 && x < this.size - 10 && y < this.size - 10;
   }
 
   getMatrix(): Cell[][] {

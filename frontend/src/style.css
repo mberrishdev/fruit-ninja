@@ -300,7 +300,7 @@ h1 {
 
   #stats {
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-30%);
     flex-direction: row;
     gap: 20px;
     white-space: nowrap;

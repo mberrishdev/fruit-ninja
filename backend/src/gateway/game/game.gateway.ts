@@ -44,7 +44,6 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
   private disconnectTimers: Map<string, NodeJS.Timeout> = new Map();
 
   handleDisconnect(client: Socket) {
-    // Clear any existing disconnect timer for this client
     const existingTimer = this.disconnectTimers.get(client.id);
     if (existingTimer) {
       clearTimeout(existingTimer);
@@ -54,9 +53,6 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
     const room = this.roomService.getRoomBySocket(client);
     if (!room) return;
 
-    console.log(`Socket ${client.id} disconnected, starting grace period...`);
-
-    // Set a new disconnect timer
     const timer = setTimeout(() => {
       if (room.players.has(client.id)) {
         console.log(
@@ -82,7 +78,7 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
       } else {
         console.log(`Player ${client.id} has already reconnected`);
       }
-    }, 2000); // Increased to 2 seconds
+    }, 500); 
 
     this.disconnectTimers.set(client.id, timer);
   }

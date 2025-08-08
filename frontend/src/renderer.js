@@ -51,9 +51,10 @@ export default class FruitNinjaRenderer {
   }
 
   setupPixi() {
+    const PADDING = 40; 
     this.app = new PIXI.Application({
-      width: this.MATRIX_SIZE * this.CELL_SIZE,
-      height: this.MATRIX_SIZE * this.CELL_SIZE,
+      width: this.MATRIX_SIZE * this.CELL_SIZE + (PADDING * 2),
+      height: this.MATRIX_SIZE * this.CELL_SIZE + (PADDING * 2),
       backgroundColor: 0x0f0f23,
       antialias: true,
       resolution: window.devicePixelRatio || 1,
@@ -325,8 +326,20 @@ export default class FruitNinjaRenderer {
       3
     );
 
+    // Calculate padding
+    const PADDING = 40; // 40 pixels padding
+    const paddingX = PADDING * scale;
+    const paddingY = PADDING * scale;
+
+    // Set scale and position with padding
     this.app.stage.scale.set(scale);
-    this.app.stage.position.set(0, 0);
+    this.app.stage.position.set(paddingX, paddingY);
+
+    // Adjust the view size to include padding
+    this.app.renderer.resize(
+      matrixW * scale + (PADDING * 2 * scale),
+      matrixH * scale + (PADDING * 2 * scale)
+    );
   }
 
   renderMatrix() {
