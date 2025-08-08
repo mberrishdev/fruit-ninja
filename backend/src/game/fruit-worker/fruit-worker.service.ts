@@ -69,7 +69,6 @@ export class FruitWorkerService implements OnModuleInit {
 
   onModuleInit() {
     this.loop();
-    console.log('FruitWorkerService initialized with varied fruit speeds at 24 FPS');
   }
 
   loop() {
@@ -81,23 +80,22 @@ export class FruitWorkerService implements OnModuleInit {
   spawnFruit() {
     // Select fruit type based on rarity
     const fruitConfig = this.selectFruitType();
-    
+
     const fruit = new Fruit({
       name: fruitConfig.name,
       symbol: fruitConfig.symbol,
       radius: fruitConfig.radius,
       score: fruitConfig.score,
       speed: fruitConfig.speed,
-      x: Math.floor(Math.random() * (100 - fruitConfig.radius * 2)) + fruitConfig.radius,
+      x:
+        Math.floor(Math.random() * (100 - fruitConfig.radius * 2)) +
+        fruitConfig.radius,
       y: 0,
       dx: (Math.random() - 0.5) * 0.5, // Smaller horizontal drift (-0.25 to 0.25)
       dy: 1, // Always falling down
     });
 
     this.fruits.push(fruit);
-    console.log(
-      `Spawned ${fruit.name} at (${fruit.x}, ${fruit.y}) - Speed: ${fruit.speed}, Direction: (${fruit.dx.toFixed(2)}, ${fruit.dy}), ID: ${fruit.id}`,
-    );
   }
 
   private selectFruitType(): FruitConfig {
@@ -133,9 +131,6 @@ export class FruitWorkerService implements OnModuleInit {
         return f;
       }).length;
 
-    console.log(
-      `Boosted ${boostedCount} ${fruitName} fruits by ${speedMultiplier}x`,
-    );
     return boostedCount;
   }
 
@@ -160,9 +155,6 @@ export class FruitWorkerService implements OnModuleInit {
       // Remove if center position is out of bounds
       if (!this.matrix.isInBounds(f.x, f.y)) {
         this.fruits = this.fruits.filter((ff) => ff.id !== f.id);
-        console.log(
-          `Removed ${f.name} ${f.id} - out of bounds at (${f.x}, ${f.y})`,
-        );
         continue;
       }
 
@@ -171,15 +163,15 @@ export class FruitWorkerService implements OnModuleInit {
 
     this.gateway.broadcastMatrix({
       matrix: this.matrix.getMatrix(),
-      fruits: this.fruits.map(f => ({
+      fruits: this.fruits.map((f) => ({
         id: f.id,
         name: f.name,
         symbol: f.symbol,
         x: f.x,
         y: f.y,
         speed: f.speed,
-        score: f.score
-      }))
+        score: f.score,
+      })),
     });
   }
 
@@ -188,7 +180,6 @@ export class FruitWorkerService implements OnModuleInit {
     for (const fruit of this.fruits) {
       fruit.speed *= multiplier;
     }
-    console.log(`Applied speed multiplier: ${multiplier}`);
   }
 
   getFruitStats() {
