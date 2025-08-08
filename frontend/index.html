@@ -1,9 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta http-equiv="refresh" content="0;url=landing.html" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="0;url=landing.html">
+    
+    <!-- Primary Meta Tags -->
+    <title>Fruit Ninja - Multiplayer Game</title>
+    <meta name="title" content="Fruit Ninja - Multiplayer Game">
+    <meta name="description" content="Play Fruit Ninja online with friends! Create or join rooms, slice fruits, and compete for the highest score in this multiplayer web game.">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fruitninja.mberrishdev.me/">
+    <meta property="og:title" content="Fruit Ninja - Multiplayer Game">
+    <meta property="og:description" content="Play Fruit Ninja online with friends! Create or join rooms, slice fruits, and compete for the highest score in this multiplayer web game.">
+    <meta property="og:image" content="https://fruitninja.mberrishdev.me/assets/preview.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://fruitninja.mberrishdev.me/">
+    <meta property="twitter:title" content="Fruit Ninja - Multiplayer Game">
+    <meta property="twitter:description" content="Play Fruit Ninja online with friends! Create or join rooms, slice fruits, and compete for the highest score in this multiplayer web game.">
+    <meta property="twitter:image" content="https://fruitninja.mberrishdev.me/assets/preview.png">
+
+    <!-- Additional Meta Tags -->
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="./assets/favicon.png">
+    <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
+
+    <!-- Preconnect to CDN -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #1a1a2e;
+        color: white;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        text-align: center;
+      }
+      .loader {
+        font-size: 1.2rem;
+        opacity: 0.7;
+      }
+      .emoji {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        animation: bounce 1s infinite;
+      }
+      @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+    </style>
   </head>
   <body>
-    Redirecting...
+    <div class="loader">
+      <div class="emoji">🍉</div>
+      Redirecting to Fruit Ninja...
+    </div>
   </body>
 </html>
