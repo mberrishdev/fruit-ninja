@@ -20,15 +20,7 @@ export class Fruit {
 
   getBounds(): { x: number; y: number }[] {
     const cells: { x: number; y: number }[] = [];
-    for (let dy = -this.radius; dy <= this.radius; dy++) {
-      for (let dx = -this.radius; dx <= this.radius; dx++) {
-        const cx = this.x + dx;
-        const cy = this.y + dy;
-        if (dx * dx + dy * dy <= this.radius * this.radius) {
-          cells.push({ x: cx, y: cy });
-        }
-      }
-    }
+    cells.push({ x: Math.round(this.x), y: Math.round(this.y) });
     return cells;
   }
 }

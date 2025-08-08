@@ -33,7 +33,7 @@ export class FruitWorkerService implements OnModuleInit {
       symbol: '🍊',
       speed: 1.0,
       score: 8,
-      radius: 2,
+      radius: 10,
       rarity: 0.3,
     },
     {
@@ -49,7 +49,7 @@ export class FruitWorkerService implements OnModuleInit {
       symbol: '🍒',
       speed: 1.8,
       score: 15,
-      radius: 1,
+      radius: 5,
       rarity: 0.7, // Fast and small = harder to catch
     },
     {
@@ -57,7 +57,7 @@ export class FruitWorkerService implements OnModuleInit {
       symbol: '🍉',
       speed: 0.4,
       score: 20,
-      radius: 4,
+      radius: 10,
       rarity: 0.9, // Rare, slow, big
     },
   ];
@@ -81,10 +81,15 @@ export class FruitWorkerService implements OnModuleInit {
     // Select fruit type based on rarity
     const fruitConfig = this.selectFruitType();
 
+    const baseRadius = fruitConfig.radius;
+    const variation = baseRadius * 0.3;
+    const randomRadius =
+      baseRadius + (Math.random() * variation * 2 - variation);
+
     const fruit = new Fruit({
       name: fruitConfig.name,
       symbol: fruitConfig.symbol,
-      radius: fruitConfig.radius,
+      radius: Math.max(0.5, randomRadius), // Ensure minimum size of 0.5
       score: fruitConfig.score,
       speed: fruitConfig.speed,
       x:
@@ -99,25 +104,20 @@ export class FruitWorkerService implements OnModuleInit {
   }
 
   private selectFruitType(): FruitConfig {
-    const random = Math.random();
+    const probs = this.fruitTypes.map((f) => 1 - f.rarity);
+    const sum = probs.reduce((a, b) => a + b, 0);
+    const r = Math.random() * sum;
 
-    // Select fruit based on rarity (higher rarity = less likely to spawn)
-    for (const fruitType of this.fruitTypes) {
-      if (random < 1 - fruitType.rarity) {
-        return fruitType;
-      }
+    let acc = 0;
+    for (let i = 0; i < this.fruitTypes.length; i++) {
+      acc += probs[i];
+      if (r < acc) return this.fruitTypes[i];
     }
-
-    // Fallback to first fruit type (most common)
     return this.fruitTypes[0];
   }
 
-  // Advanced speed control methods
-
-  // Apply gravity effect - fruits accelerate as they fall
   private applyGravity() {
     for (const fruit of this.fruits) {
-      // Increase speed gradually as fruit falls
       fruit.speed = Math.min(fruit.speed + 0.01, 3.0); // Max speed of 3.0
     }
   }
@@ -171,6 +171,7 @@ export class FruitWorkerService implements OnModuleInit {
         y: f.y,
         speed: f.speed,
         score: f.score,
+        radius: f.radius,
       })),
     });
   }

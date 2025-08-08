@@ -19,14 +19,13 @@ export class MatrixService {
   }
 
   setCell(x: number, y: number, value: Cell) {
-    // Round coordinates to integers and check bounds
     const ix = Math.round(x);
     const iy = Math.round(y);
 
     if (this.isInBounds(ix, iy)) {
       this.matrix[iy][ix] = value;
     } else {
-      console.warn(`Attempted to set cell out of bounds: (${ix}, ${iy})`);
+      // console.warn(`Attempted to set cell out of bounds: (${ix}, ${iy})`);
     }
   }
 
