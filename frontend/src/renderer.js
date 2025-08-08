@@ -1,5 +1,6 @@
 export default class FruitNinjaRenderer {
-  constructor() {
+  constructor(socket) {
+    this.socket = socket;
     this.MATRIX_SIZE = 100;
     this.CELL_SIZE = 5;
 
@@ -32,7 +33,6 @@ export default class FruitNinjaRenderer {
     this.app = null;
     this.graphics = null;
     this.textContainer = null;
-    this.socket = null;
     this.currentMatrix = null;
     this.fruitCount = 0;
     this.fruitData = new Map();
@@ -41,8 +41,6 @@ export default class FruitNinjaRenderer {
     this.frameCount = 0;
     this.score = 0;
     this.particles = [];
-
-    this.init();
   }
 
   init() {
@@ -62,6 +60,7 @@ export default class FruitNinjaRenderer {
       autoDensity: true,
     });
 
+    console.log("setupPixi");
     document.getElementById("gameContainer").appendChild(this.app.view);
 
     this.graphics = new PIXI.Graphics();
@@ -74,20 +73,6 @@ export default class FruitNinjaRenderer {
   }
 
   setupWebSocket() {
-    // this.socket = io("ws://localhost:3000", {
-    //   transports: ["websocket"],
-    //   upgrade: false,
-    // });
-
-    this.socket = io(
-      "https://socket.fruitninja.mberrishdev.me",
-      {
-        transports: ["websocket"],
-        upgrade: false,
-        secure: false,
-      }
-    );
-
     this.socket.on("connect", () => {
       this.updateConnectionStatus(true);
     });
@@ -97,6 +82,12 @@ export default class FruitNinjaRenderer {
     });
 
     this.socket.on("matrix:update", (data) => {
+      // Check if this update is for our room
+      const currentRoomCode = sessionStorage.getItem("roomCode");
+      if (data.roomCode && data.roomCode !== currentRoomCode) {
+        return; // Ignore updates for other rooms
+      }
+
       if (data.matrix) {
         this.currentMatrix = data.matrix;
         if (data.fruits) {
@@ -245,8 +236,9 @@ export default class FruitNinjaRenderer {
         )
       ) {
         console.log("Sliced fruit:", fruit.name);
-        // Send slice event to backend
-        this.socket.emit("slice", { fruitId: fruit.id });
+        // Send slice event to backend with roomCode
+        const roomCode = sessionStorage.getItem("roomCode");
+        this.socket.emit("slice", { fruitId: fruit.id, roomCode });
 
         // Create explosion particles
         const particleCount = 20;

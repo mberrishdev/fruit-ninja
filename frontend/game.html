@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fruit Ninja - Game</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="gamePage" class="page active">
+      <!-- Waiting Room UI -->
+      <div id="waitingRoom">
+        <div id="roomInfo">Room Code: <span id="roomCode"></span></div>
+        <div id="playerList" class="player-list"></div>
+        <button id="startGameBtn" class="btn">Start Game</button>
+      </div>
+
+      <!-- Game UI -->
+      <div id="gameUI">
+        <div id="connectionStatus" class="disconnected">Disconnected</div>
+        <div id="stats">
+          <div>Score: <span id="score">0</span></div>
+          <div>Fruits: <span id="fruitCount">0</span></div>
+          <div>FPS: <span id="fps">0</span></div>
+        </div>
+        <div id="gameContainer"></div>
+      </div>
+    </div>
+
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script type="module" src="./src/socket.js"></script>
+    <script type="module" src="./src/game.js"></script>
+  </body>
+</html>

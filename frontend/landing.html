@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fruit Ninja - Welcome</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="landingPage" class="page active">
+      <div class="container">
+        <h1>🍉 Fruit Ninja</h1>
+        <div class="input-group">
+          <input type="text" id="usernameInput" placeholder="Enter your username" maxlength="15">
+        </div>
+        <div class="button-group">
+          <button id="createRoomBtn" class="btn">Create New Game</button>
+          <div class="divider">or</div>
+          <div class="join-room">
+            <input type="text" id="roomCodeInput" placeholder="Enter Room Code" maxlength="6">
+            <button id="joinRoomBtn" class="btn">Join Game</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script type="module" src="./src/socket.js"></script>
+    <script type="module" src="./src/landing.js"></script>
+  </body>
+</html>

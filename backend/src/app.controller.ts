@@ -35,7 +35,7 @@ export class AppController {
       nodeVersion: process.version,
       platform: process.platform,
       game: {
-        activeFruits: this.fruitWorker.getFruitStats().totalFruits,
+        rooms: this.fruitWorker.getAllRoomStats(),
         gameStatus: 'running',
         lastUpdate: now.toISOString()
       },

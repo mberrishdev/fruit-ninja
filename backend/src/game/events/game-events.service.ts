@@ -4,10 +4,12 @@ import { Subject } from 'rxjs';
 export interface MatrixUpdate {
   matrix: any;
   fruits: any[];
+  roomCode: string;
 }
 
 export interface ScoreUpdate {
   score: number;
+  roomCode: string;
 }
 
 @Injectable()
@@ -22,7 +24,7 @@ export class GameEventsService {
     this.matrixUpdate.next(data);
   }
 
-  broadcastScore(score: number) {
-    this.scoreUpdate.next({ score });
+  broadcastScore(score: number, roomCode: string) {
+    this.scoreUpdate.next({ score, roomCode });
   }
 }

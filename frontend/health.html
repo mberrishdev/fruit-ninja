@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Ninja - Health Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a2e;
+            color: #fff;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .status.ok {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status.error {
+            background: #f44336;
+            color: white;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            color: #ffd700;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .room-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        .fruit-type {
+            display: inline-block;
+            margin: 2px;
+            padding: 2px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-size: 0.9em;
+        }
+
+        .refresh-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #45a049;
+        }
+
+        .last-update {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9em;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .highlight {
+            animation: pulse 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>🍉 Fruit Ninja Health Dashboard</h1>
+            <button class="refresh-btn" onclick="fetchHealth()">Refresh</button>
+        </div>
+        <div class="grid">
+            <div class="card" id="systemCard">
+                <h2>System Info</h2>
+                <div id="systemStats"></div>
+            </div>
+            <div class="card" id="memoryCard">
+                <h2>Memory Usage</h2>
+                <div id="memoryStats"></div>
+            </div>
+            <div class="card" id="gameCard">
+                <h2>Game Status</h2>
+                <div id="gameStats"></div>
+            </div>
+            <div class="card" id="endpointsCard">
+                <h2>Endpoints</h2>
+                <div id="endpointStats"></div>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Active Rooms</h2>
+            <div id="roomStats"></div>
+        </div>
+    </div>
+
+    <script>
+        function formatStat(label, value) {
+            return `<div class="stat"><span>${label}</span><span>${value}</span></div>`;
+        }
+
+        function formatRoomCard(roomCode, stats) {
+            return `
+                <div class="room-card">
+                    <div class="room-header">
+                        <strong>Room: ${roomCode}</strong>
+                        <span>${stats.totalFruits} fruits</span>
+                    </div>
+                    <div>
+                        ${Object.entries(stats.fruitsByType)
+                            .map(([fruit, count]) => 
+                                `<span class="fruit-type">${fruit}: ${count}</span>`
+                            ).join('')}
+                    </div>
+                    <div class="stat">
+                        <span>Average Speed</span>
+                        <span>${stats.averageSpeed.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function highlightCard(cardId) {
+            const card = document.getElementById(cardId);
+            card.classList.add('highlight');
+            setTimeout(() => card.classList.remove('highlight'), 300);
+        }
+
+        async function fetchHealth() {
+            try {
+                const response = await fetch('https://socket.fruitninja.mberrishdev.me/health');
+                const data = await response.json();
+
+                // System Info
+                document.getElementById('systemStats').innerHTML = `
+                    ${formatStat('Status', `<span class="status ok">${data.status}</span>`)}
+                    ${formatStat('Environment', data.environment)}
+                    ${formatStat('Node Version', data.nodeVersion)}
+                    ${formatStat('Platform', data.platform)}
+                    ${formatStat('Uptime', data.uptime)}
+                `;
+
+                // Memory Usage
+                document.getElementById('memoryStats').innerHTML = `
+                    ${formatStat('RSS', data.memory.rss)}
+                    ${formatStat('Heap Total', data.memory.heapTotal)}
+                    ${formatStat('Heap Used', data.memory.heapUsed)}
+                    ${formatStat('External', data.memory.external)}
+                `;
+
+                // Game Status
+                document.getElementById('gameStats').innerHTML = `
+                    ${formatStat('Active Rooms', data.game.rooms.activeRooms)}
+                    ${formatStat('Total Fruits', data.game.rooms.totalFruits)}
+                    ${formatStat('Game Status', data.game.gameStatus)}
+                    ${formatStat('Last Update', new Date(data.game.lastUpdate).toLocaleString())}
+                `;
+
+                // Endpoints
+                document.getElementById('endpointStats').innerHTML = `
+                    ${formatStat('WebSocket', data.endpoints.websocket)}
+                    ${formatStat('API', data.endpoints.api)}
+                    ${formatStat('Health', data.endpoints.health)}
+                    ${formatStat('Stats', data.endpoints.stats)}
+                `;
+
+                // Room Stats
+                document.getElementById('roomStats').innerHTML = 
+                    Object.entries(data.game.rooms.roomStats)
+                        .map(([roomCode, stats]) => formatRoomCard(roomCode, stats))
+                        .join('') || '<div class="stat">No active rooms</div>';
+
+                // Highlight updated cards
+                ['systemCard', 'memoryCard', 'gameCard', 'endpointsCard'].forEach(highlightCard);
+
+            } catch (error) {
+                console.error('Error fetching health data:', error);
+                document.getElementById('systemStats').innerHTML = `
+                    ${formatStat('Status', '<span class="status error">Error</span>')}
+                    ${formatStat('Error', error.message)}
+                `;
+            }
+        }
+
+        // Initial fetch
+        fetchHealth();
+
+        // Auto-refresh every 5 seconds
+        setInterval(fetchHealth, 5000);
+    </script>
+</body>
+</html>

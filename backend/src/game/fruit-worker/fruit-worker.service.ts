@@ -16,7 +16,13 @@ interface FruitConfig {
 
 @Injectable()
 export class FruitWorkerService implements OnModuleInit {
-  private fruits: Fruit[] = [];
+  private gameRooms: Map<
+    string,
+    {
+      fruits: Fruit[];
+      intervalId: NodeJS.Timeout;
+    }
+  > = new Map();
 
   // Different fruit types with varying speeds
   private fruitTypes: FruitConfig[] = [
@@ -68,16 +74,34 @@ export class FruitWorkerService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    this.loop();
+    // Remove the auto-start loop
   }
 
-  loop() {
-    setInterval(() => {
-      this.moveFruits();
-    }, 42); // 24 FPS: 1000ms / 24 = ~42ms per frame
+  startGameForRoom(roomCode: string) {
+    if (this.gameRooms.has(roomCode)) {
+      return; // Game already running for this room
+    }
+
+    this.gameRooms.set(roomCode, {
+      fruits: [],
+      intervalId: setInterval(() => {
+        this.moveFruitsForRoom(roomCode);
+      }, 42), // 24 FPS: 1000ms / 24 = ~42ms per frame
+    });
   }
 
-  spawnFruit() {
+  stopGameForRoom(roomCode: string) {
+    const room = this.gameRooms.get(roomCode);
+    if (room) {
+      clearInterval(room.intervalId);
+      this.gameRooms.delete(roomCode);
+    }
+  }
+
+  spawnFruitForRoom(roomCode: string) {
+    const room = this.gameRooms.get(roomCode);
+    if (!room) return;
+
     // Select fruit type based on rarity
     const fruitConfig = this.selectFruitType();
 
@@ -100,7 +124,7 @@ export class FruitWorkerService implements OnModuleInit {
       dy: 1, // Always falling down
     });
 
-    this.fruits.push(fruit);
+    room.fruits.push(fruit);
   }
 
   private selectFruitType(): FruitConfig {
@@ -116,15 +140,25 @@ export class FruitWorkerService implements OnModuleInit {
     return this.fruitTypes[0];
   }
 
-  private applyGravity() {
-    for (const fruit of this.fruits) {
+  private applyGravityForRoom(roomCode: string) {
+    const room = this.gameRooms.get(roomCode);
+    if (!room) return;
+
+    for (const fruit of room.fruits) {
       fruit.speed = Math.min(fruit.speed + 0.01, 3.0); // Max speed of 3.0
     }
   }
 
   // Speed boost for specific fruit types
-  boostFruitType(fruitName: string, speedMultiplier: number) {
-    const boostedCount = this.fruits
+  boostFruitTypeForRoom(
+    roomCode: string,
+    fruitName: string,
+    speedMultiplier: number,
+  ) {
+    const room = this.gameRooms.get(roomCode);
+    if (!room) return 0;
+
+    const boostedCount = room.fruits
       .filter((f) => f.name === fruitName)
       .map((f) => {
         f.speed *= speedMultiplier;
@@ -134,27 +168,30 @@ export class FruitWorkerService implements OnModuleInit {
     return boostedCount;
   }
 
-  moveFruits() {
+  moveFruitsForRoom(roomCode: string) {
+    const room = this.gameRooms.get(roomCode);
+    if (!room) return;
+
     // Spawn new fruits occasionally
-    if (Math.random() < 0.05) this.spawnFruit();
+    if (Math.random() < 0.05) this.spawnFruitForRoom(roomCode);
 
     // Apply only gravity effect (no wind or boundary effects)
-    this.applyGravity();
+    this.applyGravityForRoom(roomCode);
 
     // Clear old positions
-    for (const f of this.fruits) {
+    for (const f of room.fruits) {
       this.matrix.clearFruit(f);
     }
 
     // Move and redraw with speed-based movement
-    for (const f of this.fruits) {
+    for (const f of room.fruits) {
       // Use speed property for varied movement - direction stays constant
       f.x = Math.round(f.x + f.dx * f.speed);
       f.y = Math.round(f.y + f.dy * f.speed);
 
       // Remove if center position is out of bounds
       if (!this.matrix.isInBounds(f.x, f.y)) {
-        this.fruits = this.fruits.filter((ff) => ff.id !== f.id);
+        room.fruits = room.fruits.filter((ff) => ff.id !== f.id);
         continue;
       }
 
@@ -162,8 +199,9 @@ export class FruitWorkerService implements OnModuleInit {
     }
 
     this.events.broadcastMatrix({
+      roomCode, // Add roomCode to the broadcast
       matrix: this.matrix.getMatrix(),
-      fruits: this.fruits.map((f) => ({
+      fruits: room.fruits.map((f) => ({
         id: f.id,
         name: f.name,
         symbol: f.symbol,
@@ -177,16 +215,22 @@ export class FruitWorkerService implements OnModuleInit {
   }
 
   // Utility methods for game control
-  setGlobalSpeedMultiplier(multiplier: number) {
-    for (const fruit of this.fruits) {
+  setGlobalSpeedMultiplierForRoom(roomCode: string, multiplier: number) {
+    const room = this.gameRooms.get(roomCode);
+    if (!room) return;
+
+    for (const fruit of room.fruits) {
       fruit.speed *= multiplier;
     }
   }
 
-  getFruitStats() {
+  getFruitStatsForRoom(roomCode: string) {
+    const room = this.gameRooms.get(roomCode);
+    if (!room) return null;
+
     return {
-      totalFruits: this.fruits.length,
-      fruitsByType: this.fruits.reduce(
+      totalFruits: room.fruits.length,
+      fruitsByType: room.fruits.reduce(
         (acc, fruit) => {
           acc[fruit.name] = (acc[fruit.name] || 0) + 1;
           return acc;
@@ -194,20 +238,51 @@ export class FruitWorkerService implements OnModuleInit {
         {} as Record<string, number>,
       ),
       averageSpeed:
-        this.fruits.reduce((sum, f) => sum + f.speed, 0) / this.fruits.length,
+        room.fruits.reduce((sum, f) => sum + f.speed, 0) / room.fruits.length ||
+        0,
     };
   }
 
-  sliceFruit(fruitId: string): number {
-    const fruitIndex = this.fruits.findIndex(f => f.id === fruitId);
+  getAllRoomStats() {
+    const stats = {};
+    for (const [roomCode, room] of this.gameRooms.entries()) {
+      stats[roomCode] = {
+        totalFruits: room.fruits.length,
+        fruitsByType: room.fruits.reduce(
+          (acc, fruit) => {
+            acc[fruit.name] = (acc[fruit.name] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>,
+        ),
+        averageSpeed:
+          room.fruits.reduce((sum, f) => sum + f.speed, 0) /
+            room.fruits.length || 0,
+      };
+    }
+    return {
+      activeRooms: this.gameRooms.size,
+      totalFruits: Array.from(this.gameRooms.values()).reduce(
+        (sum, room) => sum + room.fruits.length,
+        0,
+      ),
+      roomStats: stats,
+    };
+  }
+
+  sliceFruit(roomCode: string, fruitId: string): number {
+    const room = this.gameRooms.get(roomCode);
+    if (!room) return 0;
+
+    const fruitIndex = room.fruits.findIndex((f) => f.id === fruitId);
     if (fruitIndex === -1) return 0;
 
-    const fruit = this.fruits[fruitIndex];
-    
+    const fruit = room.fruits[fruitIndex];
+
     this.matrix.clearFruit(fruit);
-    
-    this.fruits.splice(fruitIndex, 1);
-    
+
+    room.fruits.splice(fruitIndex, 1);
+
     return fruit.score;
   }
 }
