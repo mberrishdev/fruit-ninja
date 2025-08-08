@@ -64,36 +64,35 @@ Navigate to http://localhost:5000 in your browser
 
 ## Project Structure
 
-\`\`\`
+```
 fruit-ninja/
-├── backend/                 # NestJS Backend
-│   ├── src/
-│   │   ├── game/           # Game logic
-│   │   │   ├── fruit.entity.ts       # Fruit class
-│   │   │   ├── fruit.types.ts        # Type definitions
-│   │   │   ├── matrix/               # Matrix service
-│   │   │   ├── room/                 # Room management
-│   │   │   ├── events/               # Event bus service
-│   │   │   └── fruit-worker/         # Game loop service
-│   │   ├── gateway/        # WebSocket gateway
-│   │   └── app.controller.ts         # REST API & Health
-│   └── package.json
+├── backend/                     # NestJS Backend
+│   └── src/
+│       ├── game/                # Game logic
+│       │   ├── fruit.entity.ts  # Fruit class
+│       │   ├── fruit.types.ts   # Type definitions
+│       │   ├── matrix/          # Matrix service
+│       │   ├── room/            # Room management
+│       │   ├── events/          # Event bus service
+│       │   └── fruit-worker/    # Game loop service
+│       ├── gateway/             # WebSocket gateway
+│       └── app.controller.ts    # REST API & Health
 │
-├── frontend/               # Frontend
-│   ├── src/               # Source files
-│   │   ├── game.js        # Game page logic
-│   │   ├── landing.js     # Landing page logic
-│   │   ├── renderer.js    # Pixi.js rendering
-│   │   ├── socket.js      # Socket management
-│   │   └── style.css      # Shared styles
-│   ├── assets/            # Images and icons
-│   ├── landing.html       # Landing page
-│   ├── game.html          # Game room page
-│   ├── health.html        # Health dashboard
-│   └── index.html         # Entry point
+├── frontend/                    # Frontend
+│   ├── src/                     # Source files
+│   │   ├── game.js              # Game page logic
+│   │   ├── landing.js           # Landing page logic
+│   │   ├── renderer.js          # Pixi.js rendering
+│   │   ├── socket.js            # Socket management
+│   │   └── style.css            # Shared styles
+│   ├── assets/                  # Images and icons
+│   ├── landing.html             # Landing page
+│   ├── game.html                # Game room page
+│   ├── health.html              # Health dashboard
+│   └── index.html               # Entry point
 │
-└── README.md              # This file
-\`\`\`
+└── README.md                    # Documentation
+```
 
 ## Game Flow
 

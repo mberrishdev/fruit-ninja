@@ -8,10 +8,71 @@ document.addEventListener('DOMContentLoaded', () => {
   const createRoomBtn = document.getElementById('createRoomBtn');
   const joinRoomBtn = document.getElementById('joinRoomBtn');
 
+  // Create toast container
+  const toastContainer = document.createElement('div');
+  toastContainer.id = 'toastContainer';
+  toastContainer.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+  `;
+  document.body.appendChild(toastContainer);
+
+  function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      padding: 12px 24px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      color: white;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s ease-in;
+      display: flex;
+      align-items: center;
+      min-width: 200px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+    `;
+
+    // Set background color based on type
+    const colors = {
+      error: '#ef4444',
+      success: '#22c55e',
+      info: '#3b82f6',
+      warning: '#f59e0b'
+    };
+    toast.style.backgroundColor = colors[type] || colors.info;
+
+    // Add icon based on type
+    const icons = {
+      error: '❌',
+      success: '✅',
+      info: 'ℹ️',
+      warning: '⚠️'
+    };
+    toast.innerHTML = `
+      <span style="margin-right: 8px;">${icons[type]}</span>
+      <span style="flex-grow: 1;">${message}</span>
+    `;
+
+    toastContainer.appendChild(toast);
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+    });
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => {
+        toastContainer.removeChild(toast);
+      }, 300);
+    }, 3000);
+  }
+
   createRoomBtn.addEventListener('click', async () => {
     const username = usernameInput.value.trim();
     if (!username) {
-      alert('Please enter a username');
+      showToast('Please enter a username', 'error');
       return;
     }
 
@@ -44,14 +105,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Navigate to game page without reloading
         window.location.replace('./game.html');
       } else {
-        alert(response.error || 'Failed to create room');
+        showToast(response.error || 'Failed to create room', 'error');
         // Re-enable button on failure
         createRoomBtn.disabled = false;
         createRoomBtn.textContent = 'Create Room';
       }
     }).catch(error => {
       console.error('Room creation error:', error);
-      alert('Failed to create room. Please try again.');
+      showToast('Failed to create room. Please try again.', 'error');
       // Re-enable button on error
       createRoomBtn.disabled = false;
       createRoomBtn.textContent = 'Create Room';
@@ -63,11 +124,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const roomCode = roomCodeInput.value.trim();
     
     if (!username) {
-      alert('Please enter a username');
+      showToast('Please enter a username', 'error');
       return;
     }
     if (!roomCode) {
-      alert('Please enter a room code');
+      showToast('Please enter a room code', 'error');
       return;
     }
 
@@ -80,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Navigate to game page without reloading
         window.location.replace('./game.html');
       } else {
-        alert(response.error || 'Failed to join room');
+        showToast(response.error || 'Failed to join room', 'error');
       }
     });
   });

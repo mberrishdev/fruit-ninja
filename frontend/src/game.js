@@ -36,15 +36,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateTimer() {
     if (!gameEndTime) return;
-    
+
     const now = Date.now();
     const timeLeft = Math.max(0, gameEndTime - now);
-    
+
     const minutes = Math.floor(timeLeft / 60000);
     const seconds = Math.floor((timeLeft % 60000) / 1000);
-    
-    document.getElementById('timeLeft').textContent = 
-      `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+    document.getElementById("timeLeft").textContent = `${minutes}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
 
     if (timeLeft > 0) {
       requestAnimationFrame(updateTimer);
@@ -98,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderer.init(); // Initialize the game renderer
 
     // Start game timer
-    gameEndTime = data?.endTime || (Date.now() + 2 * 60 * 1000); // Default to 2 minutes if endTime not provided
+    gameEndTime = data?.endTime || Date.now() + 2 * 60 * 1000; // Default to 2 minutes if endTime not provided
     updateTimer();
   });
 
@@ -149,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (response.success) {
             modal.remove();
           } else {
-            alert(response.error || "Failed to start game");
+            showToast(response.error || "Failed to start game", "error");
           }
         });
       });
@@ -160,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
   startGameBtn.addEventListener("click", () => {
     socket.emit("start_game", (response) => {
       if (!response.success) {
-        alert(response.error || "Failed to start game");
+        showToast(response.error || "Failed to start game", "error");
       }
     });
   });
@@ -168,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Join/rejoin room on page load
   socket.emit("join_room", { username, roomCode }, (response) => {
     if (!response.success) {
-      alert(response.error || "Failed to rejoin room");
+      showToast(response.error || "Failed to join room", "error");
       window.location.href = "./landing.html";
     }
   });
