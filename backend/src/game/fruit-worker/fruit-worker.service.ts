@@ -84,7 +84,7 @@ export class FruitWorkerService implements OnModuleInit {
       fruits: [],
       intervalId: setInterval(() => {
         this.moveFruitsForRoom(roomCode);
-      }, 42), // 24 FPS: 1000ms / 24 = ~42ms per frame
+      }, 16), // 60 FPS: 1000ms / 60 ≈ 16ms per frame
     });
   }
 
@@ -120,8 +120,8 @@ export class FruitWorkerService implements OnModuleInit {
         Math.floor(Math.random() * (100 - fruitConfig.radius * 2)) +
         fruitConfig.radius,
       y: 0,
-      dx: (Math.random() - 0.5) * 0.5,
-      dy: 1,
+      dx: (Math.random() - 0.5) * 0.3, // Reduced horizontal drift
+      dy: 0.5, // Reduced initial vertical speed
     });
 
     room.fruits.push(fruit);
@@ -144,7 +144,7 @@ export class FruitWorkerService implements OnModuleInit {
     const room = this.gameRooms.get(roomCode);
     if (!room) return;
 
-    const GRAVITY = 0.15;
+    const GRAVITY = 0.08; // Reduced gravity for smoother fall
 
     for (const fruit of room.fruits) {
       fruit.dy += GRAVITY;
@@ -177,25 +177,18 @@ export class FruitWorkerService implements OnModuleInit {
     const room = this.gameRooms.get(roomCode);
     if (!room) return;
 
-    // Spawn new fruits occasionally
     if (Math.random() < 0.05) this.spawnFruitForRoom(roomCode);
 
-    // Apply only gravity effect (no wind or boundary effects)
     this.applyGravityForRoom(roomCode);
 
-    // Clear old positions
     for (const f of room.fruits) {
       this.matrix.clearFruit(f);
     }
 
-    // Move and redraw with speed-based movement
     for (const f of room.fruits) {
-      // Apply horizontal movement with initial speed
       f.x = Math.round(f.x + f.dx * f.initialSpeed);
-      // Apply vertical movement with current dy (affected by gravity)
       f.y = Math.round(f.y + f.dy);
 
-      // Remove if center position is out of bounds
       if (!this.matrix.isInBounds(f.x, f.y)) {
         room.fruits = room.fruits.filter((ff) => ff.id !== f.id);
         continue;
