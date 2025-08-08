@@ -4,6 +4,7 @@ body {
   background-color: #1a1a2e;
   overflow: hidden;
   font-family: Arial, sans-serif;
+  touch-action: none; /* Prevent default touch behaviors */
 }
 
 #gameContainer {
@@ -12,18 +13,20 @@ body {
   align-items: center;
   width: 100vw;
   height: 100vh;
+  position: relative;
 }
 
 #connectionStatus {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: env(safe-area-inset-top, 10px);
+  left: env(safe-area-inset-left, 10px);
   color: white;
   background: rgba(0, 0, 0, 0.7);
   padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: clamp(12px, 3vw, 14px);
   z-index: 1000;
+  backdrop-filter: blur(5px);
 }
 
 .connected {
@@ -36,12 +39,49 @@ body {
 
 #stats {
   position: absolute;
-  top: 50px;
-  left: 10px;
+  top: env(safe-area-inset-top, 50px);
+  left: env(safe-area-inset-left, 10px);
   color: white;
   background: rgba(0, 0, 0, 0.7);
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: clamp(14px, 4vw, 18px);
   z-index: 1000;
+  backdrop-filter: blur(5px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Score animation */
+@keyframes scoreUpdate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+#score {
+  font-size: clamp(20px, 6vw, 28px);
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+#score.updated {
+  animation: scoreUpdate 0.3s ease-out;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  #stats {
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: row;
+    gap: 20px;
+    white-space: nowrap;
+  }
+
+  #connectionStatus {
+    top: env(safe-area-inset-top, 20px);
+  }
 }

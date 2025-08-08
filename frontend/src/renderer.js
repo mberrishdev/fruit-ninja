@@ -84,6 +84,7 @@ export default class FruitNinjaRenderer {
       {
         transports: ["websocket"],
         upgrade: false,
+        secure: false,
       }
     );
 
@@ -120,7 +121,7 @@ export default class FruitNinjaRenderer {
       this.score += score;
       const scoreEl = document.getElementById("score");
       scoreEl.textContent = this.score;
-      
+
       // Animate score
       scoreEl.classList.add("updated");
       setTimeout(() => scoreEl.classList.remove("updated"), 200);
@@ -423,7 +424,7 @@ export default class FruitNinjaRenderer {
     // Use PIXI's ticker for smooth FPS calculation
     this.app.ticker.add(() => {
       frameCount++;
-      
+
       const now = performance.now();
       const elapsed = now - lastFpsUpdate;
 
@@ -431,7 +432,7 @@ export default class FruitNinjaRenderer {
       if (elapsed >= 500) {
         const fps = Math.round((frameCount * 1000) / elapsed);
         document.getElementById("fps").textContent = fps;
-        
+
         // Reset counters
         frameCount = 0;
         lastFpsUpdate = now;
