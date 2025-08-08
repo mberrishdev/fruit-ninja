@@ -1,6 +1,6 @@
-# Fruit Ninja - Real-time Matrix Game
+# 🍉 Fruit Ninja - Multiplayer Game
 
-A real-time fruit ninja game with a NestJS backend and Pixi.js frontend. Fruits spawn from the bottom and move upward with realistic physics, displayed on a 100x100 matrix grid.
+A real-time multiplayer fruit ninja game with room-based gameplay, built with NestJS backend and Pixi.js frontend. Players can create or join rooms, slice fruits together, and compete for the highest score.
 
 ![Game Preview](https://img.shields.io/badge/Status-Active-green)
 ![Backend](https://img.shields.io/badge/Backend-NestJS-red)
@@ -9,24 +9,33 @@ A real-time fruit ninja game with a NestJS backend and Pixi.js frontend. Fruits 
 
 ## Features
 
+### Multiplayer Gameplay
+- **Room System**: Create or join game rooms with unique codes
+- **Real-time Leaderboard**: Live score tracking for all players
+- **Room Owner Controls**: Room creator can start/restart games
+- **Player Management**: Dynamic player list with owner status
+- **2-Minute Game Sessions**: Timed matches with countdown
+
 ### Core Gameplay
 - **Real-time Matrix**: 100x100 grid updated at 24 FPS
-- **Varied Fruit Types**: 5 different fruits with unique properties
-- **Physics Simulation**: Realistic gravity and movement
-- **WebSocket Communication**: Live updates between backend and frontend
+- **Slicing Mechanics**: Mouse/touch slicing with visual effects
+- **Particle Effects**: Visual feedback for sliced fruits
+- **Score System**: Points based on fruit type and difficulty
+- **Timer System**: 2-minute game sessions with countdown
 
 ### Fruit Types
-- **Apple**: Slow, common (speed: 0.8)
-- **Orange**: Normal speed (speed: 1.0)
-- **Banana**: Faster, larger (speed: 1.2, radius: 3)
-- **Cherry**: Very fast, small, rare (speed: 1.8, radius: 1)
-- **Watermelon**: Very slow, large, rare (speed: 0.4, radius: 4)
+- **Apple** 🍎: Common, balanced (speed: 0.8, score: 5)
+- **Orange** 🍊: Medium rare, large (speed: 1.0, score: 8)
+- **Banana** 🍌: Rare, fast (speed: 1.2, score: 10)
+- **Cherry** 🍒: Very rare, fastest (speed: 1.8, score: 15)
+- **Watermelon** 🍉: Super rare, largest (speed: 0.4, score: 20)
 
 ### Technical Features
-- **Responsive Design**: Auto-scales to any screen size
+- **Responsive Design**: Auto-scales for all devices
 - **Performance Optimized**: Efficient rendering and updates
-- **Real-time Stats**: FPS counter and fruit tracking
-- **API Control**: REST endpoints for game manipulation
+- **Health Dashboard**: Real-time server monitoring
+- **Social Media Ready**: Meta tags and preview images
+- **Mobile Optimized**: Touch controls and PWA support
 
 ## Quick Start
 
@@ -35,27 +44,27 @@ A real-time fruit ninja game with a NestJS backend and Pixi.js frontend. Fruits 
 - npm or yarn
 
 ### 1. Backend Setup
-```bash
+\`\`\`bash
 cd backend
 npm install
 npm run start:dev
-```
+\`\`\`
 **Backend runs on:** http://localhost:3000
 
 ### 2. Frontend Setup
-```bash
+\`\`\`bash
 cd frontend
 npm install
 npm start
-```
-**Frontend runs on:** http://localhost:3050
+\`\`\`
+**Frontend runs on:** http://localhost:5000
 
 ### 3. Open Game
-Navigate to http://localhost:3050 in your browser
+Navigate to http://localhost:5000 in your browser
 
 ## Project Structure
 
-```
+\`\`\`
 fruit-ninja/
 ├── backend/                 # NestJS Backend
 │   ├── src/
@@ -63,227 +72,133 @@ fruit-ninja/
 │   │   │   ├── fruit.entity.ts       # Fruit class
 │   │   │   ├── fruit.types.ts        # Type definitions
 │   │   │   ├── matrix/               # Matrix service
+│   │   │   ├── room/                 # Room management
+│   │   │   ├── events/               # Event bus service
 │   │   │   └── fruit-worker/         # Game loop service
 │   │   ├── gateway/        # WebSocket gateway
-│   │   └── app.controller.ts         # REST API
+│   │   └── app.controller.ts         # REST API & Health
 │   └── package.json
 │
-├── frontend/               # Pixi.js Frontend
-│   ├── index.html          # Single-page application
-│   ├── server.js           # Express server
-│   └── package.json
+├── frontend/               # Frontend
+│   ├── src/               # Source files
+│   │   ├── game.js        # Game page logic
+│   │   ├── landing.js     # Landing page logic
+│   │   ├── renderer.js    # Pixi.js rendering
+│   │   ├── socket.js      # Socket management
+│   │   └── style.css      # Shared styles
+│   ├── assets/            # Images and icons
+│   ├── landing.html       # Landing page
+│   ├── game.html          # Game room page
+│   ├── health.html        # Health dashboard
+│   └── index.html         # Entry point
 │
 └── README.md              # This file
-```
+\`\`\`
 
-## Game Architecture
+## Game Flow
 
-### Backend (NestJS)
-- **FruitWorkerService**: Main game loop running at 24 FPS
-- **MatrixService**: Manages 100x100 grid state
-- **GameGateway**: WebSocket communication
-- **Fruit Entity**: Object-oriented fruit with physics
+1. **Landing Page**
+   - Enter username
+   - Create new room or join existing
+   - View server health dashboard
 
-### Frontend (Pixi.js)
-- **Real-time Rendering**: Canvas-based fruit visualization
-- **WebSocket Client**: Receives matrix updates
-- **Responsive Design**: Auto-scaling graphics
-- **Performance Monitoring**: FPS and stats tracking
+2. **Waiting Room**
+   - See room code
+   - View connected players
+   - Room owner can start game
 
-### Data Flow
-```
-Backend Game Loop (24 FPS)
-    ↓
-Matrix Service (Update grid)
-    ↓
-WebSocket Gateway (Broadcast)
-    ↓ 
-Frontend (Render fruits)
-```
+3. **Game Session**
+   - 2-minute timed matches
+   - Real-time score updates
+   - Live leaderboard
+   - Slice fruits for points
+   - Visual effects and feedback
 
-## Configuration
+4. **Game End**
+   - Final scores displayed
+   - Winner announcement
+   - Option to restart (room owner)
 
-### Game Settings
-```typescript
-// Backend: fruit-worker.service.ts
-GAME_FPS = 24              // Game update rate
-SPAWN_RATE = 0.05          // Fruit spawn probability
-GRAVITY_EFFECT = -0.005    // Speed decay for upward movement
+## Health Dashboard
 
-// Frontend: index.html
-MATRIX_SIZE = 100          // Grid dimensions
-CELL_SIZE = 5              // Pixels per cell
-FRUIT_RADIUS = 2           // Visual fruit size
-```
-
-### Fruit Configuration
-```typescript
-// Each fruit type has:
-{
-  name: string,            // Display name
-  symbol: string,          // Emoji symbol
-  speed: number,           // Movement speed
-  score: number,           // Point value
-  radius: number,          // Collision size
-  rarity: number           // Spawn probability (0-1)
-}
-```
+Monitor server health and game statistics:
+- Active rooms and players
+- Server uptime and memory usage
+- Room-specific statistics
+- Real-time fruit counts
+- System performance metrics
 
 ## API Endpoints
 
-### Game Statistics
-```bash
-GET /fruits/stats
-# Returns: { totalFruits, fruitsByType, averageSpeed }
-```
+### Health Check
+\`\`\`bash
+GET /health
+# Returns: { status, uptime, memory, game stats }
+\`\`\`
 
-### Speed Control
-```bash
-# Apply global speed multiplier
-POST /fruits/speed/global
-Content-Type: application/json
-{ "multiplier": 2.0 }
-
-# Boost specific fruit type
-POST /fruits/speed/boost  
-Content-Type: application/json
-{ "fruitName": "Cherry", "multiplier": 3.0 }
-```
-
-## How to Play
-
-1. **Start**: Fruits spawn from the bottom of the screen
-2. **Movement**: Fruits move upward with realistic physics
-3. **Variety**: Different fruit types have different speeds and sizes
-4. **Physics**: Fruits slow down as they move up (gravity effect)
-5. **Challenge**: Catch fast fruits before they disappear
+### Room Management
+\`\`\`bash
+# Room operations handled via WebSocket:
+- create_room
+- join_room
+- start_game
+- slice (for fruit slicing)
+\`\`\`
 
 ## Development
 
-### Running in Development Mode
-
-**Backend (with hot reload):**
-```bash
+### Running in Development
+\`\`\`bash
+# Backend (with hot reload)
 cd backend
 npm run start:dev
-```
 
-**Frontend (with auto-restart):**
-```bash
-cd frontend  
+# Frontend (with live reload)
+cd frontend
 npm run dev
-```
+\`\`\`
 
 ### Building for Production
-
-**Backend:**
-```bash
+\`\`\`bash
+# Backend
 cd backend
 npm run build
 npm run start:prod
-```
 
-**Frontend:**
-```bash
+# Frontend
 cd frontend
 npm run build
-```
-
-### Testing
-```bash
-# Backend tests
-cd backend
-npm run test
-npm run test:e2e
-
-# Linting (disabled for development)
-npm run lint
-```
-
-## Debugging
-
-### Backend Debugging
-- Check console for fruit spawn logs
-- Use API endpoints to inspect game state
-- Monitor WebSocket connections
-
-### Frontend Debugging
-- Open browser DevTools console
-- Check WebSocket connection status (top-left indicator)
-- Monitor FPS counter and fruit count
-
-### Common Issues
-
-**Connection Problems:**
-- Ensure backend is running on port 3000
-- Check CORS settings in gateway
-- Verify WebSocket connectivity
-
-**Performance Issues:**
-- Monitor FPS counter
-- Check browser console for errors
-- Reduce matrix size if needed
-
-**Rendering Issues:**
-- Verify Pixi.js compatibility
-- Check emoji font support
-- Monitor text rendering performance
+\`\`\`
 
 ## Deployment
 
-### Docker Deployment
-```dockerfile
-# Backend Dockerfile
-FROM node:16-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY dist ./dist
-EXPOSE 3000
-CMD ["node", "dist/main"]
-
-# Frontend Dockerfile  
-FROM node:16-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-EXPOSE 3050
-CMD ["npm", "start"]
-```
-
 ### Environment Variables
-```bash
+\`\`\`bash
 # Backend
 PORT=3000
 NODE_ENV=production
 
-# Frontend  
-PORT=3050
-BACKEND_URL=ws://localhost:3000
-```
+# Frontend
+BACKEND_URL=wss://your-backend-url
+\`\`\`
 
 ## Contributing
 
 1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
+2. Create feature branch (\`git checkout -b feature/amazing-feature\`)
+3. Commit changes (\`git commit -m 'Add amazing feature'\`)
+4. Push to branch (\`git push origin feature/amazing-feature\`)
 5. Open Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Future Enhancements
 
-- [ ] Player interaction (clicking to slice fruits)
-- [ ] Score system and leaderboards
+- [x] Player interaction (slicing fruits)
+- [x] Score system and leaderboards
+- [x] Multiplayer support
+- [x] Mobile touch controls
+- [x] Particle effects
 - [ ] Sound effects and music
-- [ ] Particle effects for sliced fruits
 - [ ] Multiple difficulty levels
-- [ ] Multiplayer support
-- [ ] Mobile touch controls
 - [ ] Fruit combo systems
 - [ ] Power-ups and special effects
 
@@ -291,8 +206,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Issues**: Open a GitHub issue
 - **Documentation**: Check inline code comments
-- **Performance**: Monitor browser console for debugging info
+- **Health**: Visit the /health dashboard
 
 ---
 
-**Built with ❤️ using NestJS, Pixi.js, and Socket.io** 
+**Built with ❤️ using NestJS, Pixi.js, and Socket.io**
