@@ -4,6 +4,17 @@ import { getSocket } from "./socket.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   // Check if we have the required session data
+
+  const toastContainer = document.createElement("div");
+  toastContainer.id = "toastContainer";
+  toastContainer.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+  `;
+  document.body.appendChild(toastContainer);
+
   const username = sessionStorage.getItem("username");
   const roomCode = sessionStorage.getItem("roomCode");
   const isOwner = sessionStorage.getItem("isOwner") === "true";
@@ -174,9 +185,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-
-  function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
+  function showToast(message, type = "info") {
+    const toast = document.createElement("div");
     toast.style.cssText = `
       padding: 12px 24px;
       margin-bottom: 10px;
@@ -193,19 +203,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Set background color based on type
     const colors = {
-      error: '#ef4444',
-      success: '#22c55e',
-      info: '#3b82f6',
-      warning: '#f59e0b'
+      error: "#ef4444",
+      success: "#22c55e",
+      info: "#3b82f6",
+      warning: "#f59e0b",
     };
     toast.style.backgroundColor = colors[type] || colors.info;
 
     // Add icon based on type
     const icons = {
-      error: '❌',
-      success: '✅',
-      info: 'ℹ️',
-      warning: '⚠️'
+      error: "❌",
+      success: "✅",
+      info: "ℹ️",
+      warning: "⚠️",
     };
     toast.innerHTML = `
       <span style="margin-right: 8px;">${icons[type]}</span>
@@ -214,11 +224,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     toastContainer.appendChild(toast);
     requestAnimationFrame(() => {
-      toast.style.opacity = '1';
+      toast.style.opacity = "1";
     });
 
     setTimeout(() => {
-      toast.style.opacity = '0';
+      toast.style.opacity = "0";
       setTimeout(() => {
         toastContainer.removeChild(toast);
       }, 300);
