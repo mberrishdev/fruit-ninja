@@ -236,7 +236,6 @@
                     ${formatStat('WebSocket', data.endpoints.websocket)}
                     ${formatStat('API', data.endpoints.api)}
                     ${formatStat('Health', data.endpoints.health)}
-                    ${formatStat('Stats', data.endpoints.stats)}
                 `;
 
                 // Room Stats
@@ -244,6 +243,9 @@
                     .map(([roomCode, roomData]) => formatRoomCard(roomCode, roomData))
                     .join('');
 
+                document.getElementById('roomStats').innerHTML = roomsHtml || '<div class="stat">No active rooms</div>';
+
+                // Highlight updated cards
                 ['systemCard', 'memoryCard', 'gameCard', 'endpointsCard'].forEach(highlightCard);
 
             } catch (error) {
