@@ -147,16 +147,11 @@ export default class FruitNinjaRenderer {
       this.slicePath.lineStyle(1, 0xffffff, 1);
       this.slicePath.moveTo(pos.x, pos.y);
       
-      // Add blue glow
+      // Add glow effect
       const glowFilter = new PIXI.BlurFilter();
-      glowFilter.blur = 3;
-      glowFilter.quality = 5;
-      
-      // Add bloom effect
-      const bloomFilter = new PIXI.ColorMatrixFilter();
-      bloomFilter.brightness(1.5, false);
-      
-      this.slicePath.filters = [glowFilter, bloomFilter];
+      glowFilter.blur = 2;
+      glowFilter.quality = 3;
+      this.slicePath.filters = [glowFilter];
       
       // Track the start point for the gradient
       this.sliceStartPoint = { x: pos.x, y: pos.y };
@@ -170,14 +165,33 @@ export default class FruitNinjaRenderer {
       // Clear previous line
       this.slicePath.clear();
       
-      // Draw the main thin white line
-      this.slicePath.lineStyle(1, 0xffffff, 1);
-      this.slicePath.moveTo(this.sliceStartPoint.x, this.sliceStartPoint.y);
-      this.slicePath.lineTo(pos.x, pos.y);
+      // Keep only the most recent segment of the slice
+      const maxLength = 100; // Maximum length of the slice trail
+      const dx = pos.x - lastPoint.x;
+      const dy = pos.y - lastPoint.y;
+      const currentLength = Math.sqrt(dx * dx + dy * dy);
       
-      // Draw blue glow line
-      this.slicePath.lineStyle(2, 0x00ffff, 0.3);
-      this.slicePath.moveTo(this.sliceStartPoint.x, this.sliceStartPoint.y);
+      let startX = pos.x;
+      let startY = pos.y;
+      
+      if (currentLength > maxLength) {
+        // Calculate the start point to maintain max length
+        const scale = maxLength / currentLength;
+        startX = pos.x - dx * scale;
+        startY = pos.y - dy * scale;
+      } else {
+        startX = lastPoint.x;
+        startY = lastPoint.y;
+      }
+
+      // Draw white core
+      this.slicePath.lineStyle(2, 0xffffff, 0.9);
+      this.slicePath.moveTo(startX, startY);
+      this.slicePath.lineTo(pos.x, pos.y);
+
+      // Draw outer glow
+      this.slicePath.lineStyle(4, 0xffffff, 0.3);
+      this.slicePath.moveTo(startX, startY);
       this.slicePath.lineTo(pos.x, pos.y);
 
       // Add particles along the slice path
@@ -189,13 +203,11 @@ export default class FruitNinjaRenderer {
           const x = lastPoint.x + (pos.x - lastPoint.x) * t;
           const y = lastPoint.y + (pos.y - lastPoint.y) * t;
 
-          // Create fewer, more subtle particles
-          if (Math.random() < 0.3) { // Only create particles 30% of the time
-            // Create white particle for the main trail
-            this.createParticle(x, y, 0xffffff, 0.7);
-            // Create blue particle for the glow effect
-            this.createParticle(x, y, 0x00ffff, 0.4);
-          }
+                // Create fewer, more subtle particles
+      if (Math.random() < 0.2) { // Only create particles 20% of the time
+        // Create white particle for the main trail
+        this.createParticle(x, y, 0xffffff, 0.5);
+      }
         }
 
         this.checkSliceCollisions(lastPoint, pos);
@@ -211,15 +223,14 @@ export default class FruitNinjaRenderer {
       setTimeout(() => this.slicePath.clear(), 100);
     };
 
-    // Add interactive events
     this.app.view.addEventListener("pointerdown", (e) => {
       startSlice({
         data: {
           getLocalPosition: (stage) => {
             const rect = this.app.view.getBoundingClientRect();
             return {
-              x: (e.clientX - rect.left) / this.app.stage.scale.x,
-              y: (e.clientY - rect.top) / this.app.stage.scale.y,
+              x: (e.clientX - rect.left - this.app.stage.position.x) / this.app.stage.scale.x,
+              y: (e.clientY - rect.top - this.app.stage.position.y) / this.app.stage.scale.y,
             };
           },
         },
@@ -232,8 +243,8 @@ export default class FruitNinjaRenderer {
           getLocalPosition: (stage) => {
             const rect = this.app.view.getBoundingClientRect();
             return {
-              x: (e.clientX - rect.left) / this.app.stage.scale.x,
-              y: (e.clientY - rect.top) / this.app.stage.scale.y,
+              x: (e.clientX - rect.left - this.app.stage.position.x) / this.app.stage.scale.x,
+              y: (e.clientY - rect.top - this.app.stage.position.y) / this.app.stage.scale.y,
             };
           },
         },
@@ -249,11 +260,10 @@ export default class FruitNinjaRenderer {
 
     this.fruitData.forEach((fruit) => {
       const fruitPos = {
-        x: fruit.x * this.CELL_SIZE + this.CELL_SIZE / 2,
-        y: fruit.y * this.CELL_SIZE + this.CELL_SIZE / 2,
+        x: (fruit.x * this.CELL_SIZE + this.CELL_SIZE / 2),
+        y: (fruit.y * this.CELL_SIZE + this.CELL_SIZE / 2),
       };
 
-      // Check if line segment intersects with fruit circle
       if (
         this.lineIntersectsCircle(
           start,
@@ -367,8 +377,8 @@ export default class FruitNinjaRenderer {
     const symbol =
       this.fruitSymbols.get(fruitName) || this.fruitSymbols.get("default");
 
-    const pixelX = x * this.CELL_SIZE + this.CELL_SIZE / 2;
-    const pixelY = y * this.CELL_SIZE + this.CELL_SIZE / 2;
+    const pixelX = (x * this.CELL_SIZE + this.CELL_SIZE / 2);
+    const pixelY = (y * this.CELL_SIZE + this.CELL_SIZE / 2);
 
     const baseFontSize = this.CELL_SIZE * 1.2;
     const scaledFontSize = baseFontSize * (fruitData?.radius || 1);

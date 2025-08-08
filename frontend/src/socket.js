@@ -3,8 +3,8 @@ let socket = null;
 
 export function getSocket() {
   if (!socket) {
-    // socket = io("http://localhost:3000", {
-    socket = io("https://socket.fruitninja.mberrishdev.me", {
+    socket = io("http://localhost:3000", {
+      //socket = io("https://socket.fruitninja.mberrishdev.me", {
       transports: ["websocket"],
       upgrade: false,
       secure: false,
@@ -21,7 +21,6 @@ export function getSocket() {
       autoConnect: false,
     });
 
-    // Log socket events for debugging
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
     });
@@ -31,7 +30,6 @@ export function getSocket() {
     });
 
     socket.on("reconnect", (attemptNumber) => {
-      // After reconnect, try to rejoin room if we have the data
       const username = sessionStorage.getItem("username");
       const roomCode = sessionStorage.getItem("roomCode");
       if (username && roomCode) {
@@ -49,7 +47,6 @@ export function getSocket() {
       console.error("Socket error:", error);
     });
 
-    // Connect the socket
     socket.connect();
   }
   return socket;

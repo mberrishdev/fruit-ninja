@@ -10,6 +10,7 @@ export class Fruit {
   x: number;
   y: number;
   speed: number;
+  initialSpeed: number;
   dx: number;
   dy: number;
 

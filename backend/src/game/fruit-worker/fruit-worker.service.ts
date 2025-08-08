@@ -11,9 +11,8 @@ interface FruitConfig {
   speed: number;
   score: number;
   radius: number;
-  rarity: number; // 0-1, higher = more rare
+  rarity: number;
 }
-
 @Injectable()
 export class FruitWorkerService implements OnModuleInit {
   private gameRooms: Map<
@@ -24,20 +23,19 @@ export class FruitWorkerService implements OnModuleInit {
     }
   > = new Map();
 
-  // Different fruit types with varying speeds
   private fruitTypes: FruitConfig[] = [
     {
       name: 'Apple',
       symbol: '🍎',
-      speed: 0.8,
+      speed: 2.0,
       score: 5,
-      radius: 2,
+      radius: 6,
       rarity: 0.1, // Common
     },
     {
       name: 'Orange',
       symbol: '🍊',
-      speed: 1.0,
+      speed: 1.8,
       score: 8,
       radius: 10,
       rarity: 0.3,
@@ -45,7 +43,7 @@ export class FruitWorkerService implements OnModuleInit {
     {
       name: 'Banana',
       symbol: '🍌',
-      speed: 1.2,
+      speed: 1.5,
       score: 10,
       radius: 3,
       rarity: 0.5,
@@ -53,18 +51,18 @@ export class FruitWorkerService implements OnModuleInit {
     {
       name: 'Cherry',
       symbol: '🍒',
-      speed: 1.8,
+      speed: 2.2,
       score: 15,
-      radius: 5,
-      rarity: 0.7, // Fast and small = harder to catch
+      radius: 8,
+      rarity: 0.7,
     },
     {
       name: 'Watermelon',
       symbol: '🍉',
-      speed: 0.4,
+      speed: 1.2,
       score: 20,
       radius: 10,
-      rarity: 0.9, // Rare, slow, big
+      rarity: 0.9,
     },
   ];
 
@@ -102,7 +100,6 @@ export class FruitWorkerService implements OnModuleInit {
     const room = this.gameRooms.get(roomCode);
     if (!room) return;
 
-    // Select fruit type based on rarity
     const fruitConfig = this.selectFruitType();
 
     const baseRadius = fruitConfig.radius;
@@ -110,18 +107,21 @@ export class FruitWorkerService implements OnModuleInit {
     const randomRadius =
       baseRadius + (Math.random() * variation * 2 - variation);
 
+    const randomSpeed = 1.0 + Math.random();
+
     const fruit = new Fruit({
       name: fruitConfig.name,
       symbol: fruitConfig.symbol,
-      radius: Math.max(0.5, randomRadius), // Ensure minimum size of 0.5
+      radius: Math.max(0.5, randomRadius),
       score: fruitConfig.score,
-      speed: fruitConfig.speed,
+      speed: randomSpeed,
+      initialSpeed: randomSpeed,
       x:
         Math.floor(Math.random() * (100 - fruitConfig.radius * 2)) +
         fruitConfig.radius,
       y: 0,
-      dx: (Math.random() - 0.5) * 0.5, // Smaller horizontal drift (-0.25 to 0.25)
-      dy: 1, // Always falling down
+      dx: (Math.random() - 0.5) * 0.5,
+      dy: 1,
     });
 
     room.fruits.push(fruit);
@@ -144,8 +144,13 @@ export class FruitWorkerService implements OnModuleInit {
     const room = this.gameRooms.get(roomCode);
     if (!room) return;
 
+    const GRAVITY = 0.15;
+
     for (const fruit of room.fruits) {
-      fruit.speed = Math.min(fruit.speed + 0.01, 3.0); // Max speed of 3.0
+      fruit.dy += GRAVITY;
+
+      const maxFallSpeed = fruit.initialSpeed * 0.5;
+      fruit.dy = Math.min(fruit.dy, maxFallSpeed);
     }
   }
 
@@ -185,9 +190,10 @@ export class FruitWorkerService implements OnModuleInit {
 
     // Move and redraw with speed-based movement
     for (const f of room.fruits) {
-      // Use speed property for varied movement - direction stays constant
-      f.x = Math.round(f.x + f.dx * f.speed);
-      f.y = Math.round(f.y + f.dy * f.speed);
+      // Apply horizontal movement with initial speed
+      f.x = Math.round(f.x + f.dx * f.initialSpeed);
+      // Apply vertical movement with current dy (affected by gravity)
+      f.y = Math.round(f.y + f.dy);
 
       // Remove if center position is out of bounds
       if (!this.matrix.isInBounds(f.x, f.y)) {
@@ -199,7 +205,7 @@ export class FruitWorkerService implements OnModuleInit {
     }
 
     this.events.broadcastMatrix({
-      roomCode, // Add roomCode to the broadcast
+      roomCode,
       matrix: this.matrix.getMatrix(),
       fruits: room.fruits.map((f) => ({
         id: f.id,
@@ -207,7 +213,7 @@ export class FruitWorkerService implements OnModuleInit {
         symbol: f.symbol,
         x: f.x,
         y: f.y,
-        speed: f.speed,
+        speed: f.initialSpeed || f.speed,
         score: f.score,
         radius: f.radius,
       })),

@@ -59,8 +59,10 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
     // Set a new disconnect timer
     const timer = setTimeout(() => {
       if (room.players.has(client.id)) {
-        console.log(`Grace period ended for ${client.id}, removing from room ${room.code}`);
-        
+        console.log(
+          `Grace period ended for ${client.id}, removing from room ${room.code}`,
+        );
+
         const players = Array.from(room.players.values())
           .filter((p) => p.id !== client.id)
           .map((p) => ({
@@ -136,11 +138,11 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
 
     const result = this.roomService.startGame(client, room.code);
     if (result.success) {
-      // Start the fruit worker for this room
       this.fruitWorker.startGameForRoom(room.code);
 
-      // Notify all players in the room with endTime
-      this.server.to(room.code).emit('game_started', { endTime: result.endTime });
+      this.server
+        .to(room.code)
+        .emit('game_started', { endTime: result.endTime });
       return { success: true };
     }
 
@@ -154,9 +156,7 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
 
     const score = this.fruitWorker.sliceFruit(room.code, payload.fruitId);
     if (score > 0) {
-      // Update player's score and broadcast leaderboard
       this.roomService.updatePlayerScore(room.code, client.id, score);
-      // Broadcast score through events service
       this.events.broadcastScore(score, room.code);
     }
   }
