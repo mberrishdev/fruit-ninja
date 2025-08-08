@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { MatrixService } from '../matrix/matrix.service';
-import { GameGateway } from 'src/gateway/game/game.gateway';
+import { GameEventsService } from '../events/game-events.service';
 import { Fruit } from '../fruit.entity';
 import { FruitSymbol } from '../fruit.types';
 
@@ -64,7 +64,7 @@ export class FruitWorkerService implements OnModuleInit {
 
   constructor(
     private readonly matrix: MatrixService,
-    private readonly gateway: GameGateway,
+    private readonly events: GameEventsService,
   ) {}
 
   onModuleInit() {
@@ -161,7 +161,7 @@ export class FruitWorkerService implements OnModuleInit {
       this.matrix.drawFruit(f);
     }
 
-    this.gateway.broadcastMatrix({
+    this.events.broadcastMatrix({
       matrix: this.matrix.getMatrix(),
       fruits: this.fruits.map((f) => ({
         id: f.id,
@@ -196,5 +196,18 @@ export class FruitWorkerService implements OnModuleInit {
       averageSpeed:
         this.fruits.reduce((sum, f) => sum + f.speed, 0) / this.fruits.length,
     };
+  }
+
+  sliceFruit(fruitId: string): number {
+    const fruitIndex = this.fruits.findIndex(f => f.id === fruitId);
+    if (fruitIndex === -1) return 0;
+
+    const fruit = this.fruits[fruitIndex];
+    
+    this.matrix.clearFruit(fruit);
+    
+    this.fruits.splice(fruitIndex, 1);
+    
+    return fruit.score;
   }
 }
