@@ -74,18 +74,18 @@ export default class FruitNinjaRenderer {
   }
 
   setupWebSocket() {
-    this.socket = io("ws://localhost:3000", {
-      transports: ["websocket"],
-      upgrade: false,
-    });
+    // this.socket = io("ws://localhost:3000", {
+    //   transports: ["websocket"],
+    //   upgrade: false,
+    // });
 
-    // this.socket = io(
-    //   "http://ec2-18-195-72-62.eu-central-1.compute.amazonaws.com",
-    //   {
-    //     transports: ["websocket"],
-    //     upgrade: false,
-    //   }
-    // );
+    this.socket = io(
+      "http://ec2-18-195-72-62.eu-central-1.compute.amazonaws.com",
+      {
+        transports: ["websocket"],
+        upgrade: false,
+      }
+    );
 
     this.socket.on("connect", () => {
       this.updateConnectionStatus(true);
@@ -118,7 +118,12 @@ export default class FruitNinjaRenderer {
     // Listen for score updates
     this.socket.on("score:update", ({ score }) => {
       this.score += score;
-      document.getElementById("score").textContent = this.score;
+      const scoreEl = document.getElementById("score");
+      scoreEl.textContent = this.score;
+      
+      // Animate score
+      scoreEl.classList.add("updated");
+      setTimeout(() => scoreEl.classList.remove("updated"), 200);
     });
   }
 
@@ -412,11 +417,25 @@ export default class FruitNinjaRenderer {
   }
 
   startRenderLoop() {
-    setInterval(() => {
+    let frameCount = 0;
+    let lastFpsUpdate = performance.now();
+
+    // Use PIXI's ticker for smooth FPS calculation
+    this.app.ticker.add(() => {
+      frameCount++;
+      
       const now = performance.now();
-      const fps = Math.round(1000 / (now - this.lastFrameTime));
-      document.getElementById("fps").textContent = fps;
-      this.lastFrameTime = now;
-    }, 1000);
+      const elapsed = now - lastFpsUpdate;
+
+      // Update FPS every 500ms
+      if (elapsed >= 500) {
+        const fps = Math.round((frameCount * 1000) / elapsed);
+        document.getElementById("fps").textContent = fps;
+        
+        // Reset counters
+        frameCount = 0;
+        lastFpsUpdate = now;
+      }
+    });
   }
 }
