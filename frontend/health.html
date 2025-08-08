@@ -227,7 +227,6 @@
                 document.getElementById('gameStats').innerHTML = `
                     ${formatStat('Active Rooms', data.game.gameRooms.totalRooms)}
                     ${formatStat('Active Games', data.game.gameRooms.activeGames)}
-                    ${formatStat('Total Fruits', data.game.rooms.totalFruits)}
                     ${formatStat('Game Status', data.game.gameStatus)}
                     ${formatStat('Last Update', new Date(data.game.lastUpdate).toLocaleString())}
                 `;
