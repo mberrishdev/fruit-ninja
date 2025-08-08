@@ -2,10 +2,12 @@ import FruitNinjaRenderer from "./renderer.js";
 
 import { getSocket } from "./socket.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Check if we have the required session data
+// Create toast container globally
+let toastContainer;
 
-  const toastContainer = document.createElement("div");
+document.addEventListener("DOMContentLoaded", () => {
+  // Initialize toast container
+  toastContainer = document.createElement("div");
   toastContainer.id = "toastContainer";
   toastContainer.style.cssText = `
     position: fixed;
@@ -14,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     z-index: 1000;
   `;
   document.body.appendChild(toastContainer);
-
+  // Check if we have the required session data
   const username = sessionStorage.getItem("username");
   const roomCode = sessionStorage.getItem("roomCode");
   const isOwner = sessionStorage.getItem("isOwner") === "true";
