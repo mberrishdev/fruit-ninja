@@ -70,7 +70,6 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
         this.roomService.leaveRoom(client);
         this.disconnectTimers.delete(client.id);
 
-        // Notify remaining players about the disconnection
         if (players.length > 0) {
           console.log('Notifying remaining players:', players);
           this.server.to(room.code).emit('player_joined', { players });
@@ -78,7 +77,7 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
       } else {
         console.log(`Player ${client.id} has already reconnected`);
       }
-    }, 500); 
+    }, 2000); 
 
     this.disconnectTimers.set(client.id, timer);
   }

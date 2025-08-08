@@ -97,25 +97,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     socket.emit('create_room', { username }, (response) => {
-      if (response.success) {
-        // Store data in sessionStorage
-        sessionStorage.setItem('username', username);
-        sessionStorage.setItem('roomCode', response.roomCode);
-        sessionStorage.setItem('isOwner', 'true');
-        // Navigate to game page without reloading
-        window.location.replace('./game.html');
-      } else {
-        showToast(response.error || 'Failed to create room', 'error');
-        // Re-enable button on failure
+      try {
+        if (response.success) {
+          // Store data in sessionStorage
+          sessionStorage.setItem('username', username);
+          sessionStorage.setItem('roomCode', response.roomCode);
+          sessionStorage.setItem('isOwner', 'true');
+          // Navigate to game page without reloading
+          window.location.replace('./game.html');
+        } else {
+          showToast(response.error || 'Failed to create room', 'error');
+          // Re-enable button on failure
+          createRoomBtn.disabled = false;
+          createRoomBtn.textContent = 'Create Room';
+        }
+      } catch (error) {
+        console.error('Room creation error:', error);
+        showToast('Failed to create room. Please try again.', 'error');
+        // Re-enable button on error
         createRoomBtn.disabled = false;
         createRoomBtn.textContent = 'Create Room';
       }
-    }).catch(error => {
-      console.error('Room creation error:', error);
-      showToast('Failed to create room. Please try again.', 'error');
-      // Re-enable button on error
-      createRoomBtn.disabled = false;
-      createRoomBtn.textContent = 'Create Room';
     });
   });
 
@@ -133,15 +135,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     socket.emit('join_room', { username, roomCode }, (response) => {
-      if (response.success) {
-        // Store data in sessionStorage
-        sessionStorage.setItem('username', username);
-        sessionStorage.setItem('roomCode', roomCode);
-        sessionStorage.setItem('isOwner', 'false');
-        // Navigate to game page without reloading
-        window.location.replace('./game.html');
-      } else {
-        showToast(response.error || 'Failed to join room', 'error');
+      try {
+        if (response.success) {
+          // Store data in sessionStorage
+          sessionStorage.setItem('username', username);
+          sessionStorage.setItem('roomCode', roomCode);
+          sessionStorage.setItem('isOwner', 'false');
+          // Navigate to game page without reloading
+          window.location.replace('./game.html');
+        } else {
+          showToast(response.error || 'Failed to join room', 'error');
+        }
+      } catch (error) {
+        console.error('Room join error:', error);
+        showToast('Failed to join room. Please try again.', 'error');
       }
     });
   });

@@ -183,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
   socket.emit("join_room", { username, roomCode }, (response) => {
     if (!response.success) {
       showToast(response.error || "Failed to join room", "error");
-      window.location.href = "./landing.html";
+      //window.location.href = "./landing.html";
     }
   });
 
