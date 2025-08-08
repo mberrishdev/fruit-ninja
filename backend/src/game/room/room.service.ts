@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
+import { FruitWorkerService } from '../fruit-worker/fruit-worker.service';
 
 interface Player {
   id: string;
@@ -23,7 +24,7 @@ export class RoomService {
   private static instance: RoomService;
   private rooms: Map<string, Room>;
 
-  constructor() {
+  constructor(private readonly fruitWorker: FruitWorkerService) {
     console.log("RoomService constructor called");
     if (!RoomService.instance) {
       this.rooms = new Map();
@@ -154,6 +155,7 @@ export class RoomService {
       clearTimeout(room.gameTimer);
       room.gameTimer = undefined;
     }
+    this.fruitWorker.stopGameForRoom(room.code);
 
     // Get final leaderboard
     const finalLeaderboard = Array.from(room.players.values())
@@ -190,7 +192,8 @@ export class RoomService {
         // Only delete room if it's empty and game hasn't started
         if (room.players.size === 0 && !room.isGameStarted) {
           this.rooms.delete(roomCode);
-          console.log(`Room ${roomCode} deleted`);
+          this.fruitWorker.stopGameForRoom(roomCode);
+          console.log(`Room ${roomCode} deleted and fruit worker stopped`);
         }
         // If leaving player was owner, assign new owner
         else if (wasOwner && room.players.size > 0) {
@@ -241,5 +244,28 @@ export class RoomService {
     room.players.forEach(p => {
       p.socket.emit('leaderboard:update', { leaderboard });
     });
+  }
+
+  getGameRooms(): any {
+    const sanitizedRooms = {};
+    for (const [roomCode, room] of this.rooms.entries()) {
+      sanitizedRooms[roomCode] = {
+        code: room.code,
+        isGameStarted: room.isGameStarted,
+        gameStartTime: room.gameStartTime,
+        gameEndTime: room.gameEndTime,
+        players: Array.from(room.players.values()).map(player => ({
+          id: player.id,
+          username: player.username,
+          isOwner: player.isOwner,
+          score: player.score
+        }))
+      };
+    }
+    return {
+      totalRooms: this.rooms.size,
+      activeGames: Array.from(this.rooms.values()).filter(r => r.isGameStarted).length,
+      rooms: sanitizedRooms
+    };
   }
 }

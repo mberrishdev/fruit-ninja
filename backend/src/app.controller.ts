@@ -1,12 +1,14 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { AppService } from './app.service';
 import { FruitWorkerService } from './game/fruit-worker/fruit-worker.service';
+import { RoomService } from './game/room/room.service';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly fruitWorker: FruitWorkerService,
+    private readonly roomService: RoomService,
   ) {}
 
   @Get()
@@ -15,11 +17,10 @@ export class AppController {
   }
 
   @Get('health')
-  getHealth() {
+  getHealth(): Record<string, any> {
     const now = new Date();
     const uptime = process.uptime();
     const memoryUsage = process.memoryUsage();
-    
     return {
       status: 'ok',
       timestamp: now.toISOString(),
@@ -35,16 +36,15 @@ export class AppController {
       nodeVersion: process.version,
       platform: process.platform,
       game: {
-        rooms: this.fruitWorker.getAllRoomStats(),
+        gameRooms: this.roomService.getGameRooms(),
         gameStatus: 'running',
-        lastUpdate: now.toISOString()
+        lastUpdate: now.toISOString(),
       },
       endpoints: {
         websocket: 'ws://localhost:3000',
         api: 'http://localhost:3000',
         health: 'http://localhost:3000/health',
-        stats: 'http://localhost:3000/fruits/stats'
-      }
+      },
     };
   }
 }

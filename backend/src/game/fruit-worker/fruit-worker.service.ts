@@ -243,33 +243,6 @@ export class FruitWorkerService implements OnModuleInit {
     };
   }
 
-  getAllRoomStats() {
-    const stats = {};
-    for (const [roomCode, room] of this.gameRooms.entries()) {
-      stats[roomCode] = {
-        totalFruits: room.fruits.length,
-        fruitsByType: room.fruits.reduce(
-          (acc, fruit) => {
-            acc[fruit.name] = (acc[fruit.name] || 0) + 1;
-            return acc;
-          },
-          {} as Record<string, number>,
-        ),
-        averageSpeed:
-          room.fruits.reduce((sum, f) => sum + f.speed, 0) /
-            room.fruits.length || 0,
-      };
-    }
-    return {
-      activeRooms: this.gameRooms.size,
-      totalFruits: Array.from(this.gameRooms.values()).reduce(
-        (sum, room) => sum + room.fruits.length,
-        0,
-      ),
-      roomStats: stats,
-    };
-  }
-
   sliceFruit(roomCode: string, fruitId: string): number {
     const room = this.gameRooms.get(roomCode);
     if (!room) return 0;

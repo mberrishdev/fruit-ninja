@@ -3,8 +3,8 @@ let socket = null;
 
 export function getSocket() {
   if (!socket) {
-    //socket = io("http://localhost:3000", {
-       socket = io("https://socket.fruitninja.mberrishdev.me", {
+    // socket = io("http://localhost:3000", {
+    socket = io("https://socket.fruitninja.mberrishdev.me", {
       transports: ["websocket"],
       upgrade: false,
       secure: false,
