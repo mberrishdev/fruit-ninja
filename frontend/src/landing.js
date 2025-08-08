@@ -1,6 +1,47 @@
 import { getSocket } from './socket.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize floating fruits animation
+  const fruits = document.querySelectorAll('.background-fruits .fruit');
+  fruits.forEach(fruit => {
+    fruit.style.animationDuration = `${15 + Math.random() * 10}s`;
+  });
+
+  // Initialize logo animation
+  const logoChars = document.querySelectorAll('.logo-char');
+  logoChars.forEach((char, index) => {
+    char.style.animationDelay = `${index * 0.1}s`;
+  });
+
+  // Handle How to Play modal
+  const howToPlayBtn = document.querySelector('.how-to-play');
+  const modal = document.getElementById('howToPlayModal');
+  const closeModalBtn = document.querySelector('.close-modal');
+
+  howToPlayBtn.addEventListener('click', () => {
+    modal.style.display = 'flex';
+    modal.style.opacity = '0';
+    requestAnimationFrame(() => {
+      modal.style.opacity = '1';
+      modal.style.transition = 'opacity 0.3s ease';
+    });
+  });
+
+  closeModalBtn.addEventListener('click', () => {
+    modal.style.opacity = '0';
+    setTimeout(() => {
+      modal.style.display = 'none';
+    }, 300);
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.style.opacity = '0';
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+    }
+  });
   const socket = getSocket();
 
   const usernameInput = document.getElementById('usernameInput');

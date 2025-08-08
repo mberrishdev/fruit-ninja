@@ -39,22 +39,121 @@
     <link rel="stylesheet" href="./src/style.css" />
   </head>
   <body>
+    <div class="background-fruits">
+      <div class="fruit">🍎</div>
+      <div class="fruit">🍊</div>
+      <div class="fruit">🍋</div>
+      <div class="fruit">🍉</div>
+      <div class="fruit">🍇</div>
+      <div class="fruit">🍓</div>
+      <div class="fruit">🍑</div>
+      <div class="fruit">🍍</div>
+    </div>
+
     <div id="landingPage" class="page active">
+      <div class="game-logo">
+        <div class="logo-text">
+          <span class="logo-char">F</span>
+          <span class="logo-char">R</span>
+          <span class="logo-char">U</span>
+          <span class="logo-char">I</span>
+          <span class="logo-char">T</span>
+          <span class="logo-space"></span>
+          <span class="logo-char">N</span>
+          <span class="logo-char">I</span>
+          <span class="logo-char">N</span>
+          <span class="logo-char">J</span>
+          <span class="logo-char">A</span>
+        </div>
+        <div class="logo-subtitle">Multiplayer Edition</div>
+      </div>
+
       <div class="container">
-        <h1>🍉 Fruit Ninja</h1>
-        <div class="input-group">
-          <input type="text" id="usernameInput" placeholder="Enter your username" maxlength="15">
-        </div>
-        <div class="button-group">
-          <button id="createRoomBtn" class="btn">Create New Game</button>
-          <div class="divider">or</div>
-          <div class="join-room">
-            <input type="text" id="roomCodeInput" placeholder="Enter Room Code" maxlength="6">
-            <button id="joinRoomBtn" class="btn">Join Game</button>
+        <div class="card quick-start">
+          <h2>Quick Start</h2>
+          <div class="input-group">
+            <div class="input-icon">👤</div>
+            <input type="text" id="usernameInput" placeholder="Enter your username" maxlength="15">
           </div>
-          <div class="divider">or</div>
-          <a href="./health.html" class="btn health-btn">View Health Dashboard</a>
+          <button id="createRoomBtn" class="btn primary-btn">
+            <span class="btn-icon">🎮</span>
+            Create New Game
+          </button>
         </div>
+
+        <div class="card join-game">
+          <h2>Join Existing Game</h2>
+          <div class="join-room">
+            <div class="input-group">
+              <div class="input-icon">🎯</div>
+              <input type="text" id="roomCodeInput" placeholder="Enter Room Code" maxlength="6">
+            </div>
+            <button id="joinRoomBtn" class="btn secondary-btn">
+              <span class="btn-icon">🤝</span>
+              Join Game
+            </button>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <a href="./health.html" class="action-btn">
+            <span class="btn-icon">📊</span>
+            Server Status
+          </a>
+          <button class="action-btn how-to-play">
+            <span class="btn-icon">❓</span>
+            How to Play
+          </button>
+        </div>
+      </div>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">⚔️</div>
+          <h3>Multiplayer</h3>
+          <p>Compete with friends in real-time</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🏆</div>
+          <h3>Leaderboard</h3>
+          <p>Track scores and rankings</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📱</div>
+          <h3>Cross-Platform</h3>
+          <p>Play on any device</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- How to Play Modal -->
+    <div id="howToPlayModal" class="modal">
+      <div class="modal-content">
+        <h2>How to Play</h2>
+        <div class="tutorial-steps">
+          <div class="tutorial-step">
+            <div class="step-icon">1️⃣</div>
+            <div class="step-text">
+              <h3>Create or Join</h3>
+              <p>Start a new game room or join an existing one with friends</p>
+            </div>
+          </div>
+          <div class="tutorial-step">
+            <div class="step-icon">2️⃣</div>
+            <div class="step-text">
+              <h3>Slice Fruits</h3>
+              <p>Use your mouse or touch to slice flying fruits</p>
+            </div>
+          </div>
+          <div class="tutorial-step">
+            <div class="step-icon">3️⃣</div>
+            <div class="step-text">
+              <h3>Score Points</h3>
+              <p>Different fruits give different points. Compete for the highest score!</p>
+            </div>
+          </div>
+        </div>
+        <button class="btn close-modal">Got it!</button>
       </div>
     </div>
 

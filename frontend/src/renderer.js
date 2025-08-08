@@ -111,14 +111,15 @@ export default class FruitNinjaRenderer {
       const scoreEl = document.getElementById("score");
       scoreEl.textContent = this.score;
 
-      // Animate score
       scoreEl.classList.add("updated");
       setTimeout(() => scoreEl.classList.remove("updated"), 200);
     });
   }
 
   setupEventListeners() {
-    window.addEventListener("resize", () => this.handleResize());
+    // Store resize handle
+    this.handleResize = () => this.handleResize();
+    window.addEventListener("resize", this.handleResize);
 
     // Track mouse/touch for slicing
     this.slicePath = new PIXI.Graphics();
@@ -132,16 +133,21 @@ export default class FruitNinjaRenderer {
     let lastPoint = null;
 
     // Start animation loop for particles
-    this.app.ticker.add(() => this.updateParticles());
+    this.updateParticlesHandler = () => this.updateParticles();
+    this.app.ticker.add(this.updateParticlesHandler);
 
-    const startSlice = (e) => {
+    // Store slice handlers
+    this.handlePointerDown = (e) => {
       isSlicing = true;
-      const pos = e.data.getLocalPosition(this.app.stage);
+      const rect = this.app.view.getBoundingClientRect();
+      const pos = {
+        x: (e.clientX - rect.left - this.app.stage.position.x) / this.app.stage.scale.x,
+        y: (e.clientY - rect.top - this.app.stage.position.y) / this.app.stage.scale.y,
+      };
       lastPoint = pos;
       this.slicePath.clear();
       
       // Create gradient effect with multiple lines
-      // Base white line (thinnest)
       this.slicePath.lineStyle(1, 0xffffff, 1);
       this.slicePath.moveTo(pos.x, pos.y);
       
@@ -151,20 +157,21 @@ export default class FruitNinjaRenderer {
       glowFilter.quality = 3;
       this.slicePath.filters = [glowFilter];
       
-      // Track the start point for the gradient
       this.sliceStartPoint = { x: pos.x, y: pos.y };
     };
 
-    const moveSlice = (e) => {
+    this.handlePointerMove = (e) => {
       if (!isSlicing) return;
 
-      const pos = e.data.getLocalPosition(this.app.stage);
+      const rect = this.app.view.getBoundingClientRect();
+      const pos = {
+        x: (e.clientX - rect.left - this.app.stage.position.x) / this.app.stage.scale.x,
+        y: (e.clientY - rect.top - this.app.stage.position.y) / this.app.stage.scale.y,
+      };
       
-      // Clear previous line
       this.slicePath.clear();
       
-      // Keep only the most recent segment of the slice
-      const maxLength = 100; // Maximum length of the slice trail
+      const maxLength = 100;
       const dx = pos.x - lastPoint.x;
       const dy = pos.y - lastPoint.y;
       const currentLength = Math.sqrt(dx * dx + dy * dy);
@@ -173,7 +180,6 @@ export default class FruitNinjaRenderer {
       let startY = pos.y;
       
       if (currentLength > maxLength) {
-        // Calculate the start point to maintain max length
         const scale = maxLength / currentLength;
         startX = pos.x - dx * scale;
         startY = pos.y - dy * scale;
@@ -192,20 +198,16 @@ export default class FruitNinjaRenderer {
       this.slicePath.moveTo(startX, startY);
       this.slicePath.lineTo(pos.x, pos.y);
 
-      // Add particles along the slice path
       if (lastPoint) {
-        // Create particles between last point and current point
         const steps = 5;
         for (let i = 0; i < steps; i++) {
           const t = i / steps;
           const x = lastPoint.x + (pos.x - lastPoint.x) * t;
           const y = lastPoint.y + (pos.y - lastPoint.y) * t;
 
-                // Create fewer, more subtle particles
-      if (Math.random() < 0.2) { // Only create particles 20% of the time
-        // Create white particle for the main trail
-        this.createParticle(x, y, 0xffffff, 0.5);
-      }
+          if (Math.random() < 0.2) {
+            this.createParticle(x, y, 0xffffff, 0.5);
+          }
         }
 
         this.checkSliceCollisions(lastPoint, pos);
@@ -214,43 +216,17 @@ export default class FruitNinjaRenderer {
       lastPoint = pos;
     };
 
-    const endSlice = () => {
+    this.handlePointerUp = () => {
       isSlicing = false;
       lastPoint = null;
-      // Fade out slice path
       setTimeout(() => this.slicePath.clear(), 100);
     };
 
-    this.app.view.addEventListener("pointerdown", (e) => {
-      startSlice({
-        data: {
-          getLocalPosition: (stage) => {
-            const rect = this.app.view.getBoundingClientRect();
-            return {
-              x: (e.clientX - rect.left - this.app.stage.position.x) / this.app.stage.scale.x,
-              y: (e.clientY - rect.top - this.app.stage.position.y) / this.app.stage.scale.y,
-            };
-          },
-        },
-      });
-    });
-
-    this.app.view.addEventListener("pointermove", (e) => {
-      moveSlice({
-        data: {
-          getLocalPosition: (stage) => {
-            const rect = this.app.view.getBoundingClientRect();
-            return {
-              x: (e.clientX - rect.left - this.app.stage.position.x) / this.app.stage.scale.x,
-              y: (e.clientY - rect.top - this.app.stage.position.y) / this.app.stage.scale.y,
-            };
-          },
-        },
-      });
-    });
-
-    this.app.view.addEventListener("pointerup", endSlice);
-    this.app.view.addEventListener("pointerout", endSlice);
+    // Add event listeners
+    this.app.view.addEventListener("pointerdown", this.handlePointerDown);
+    this.app.view.addEventListener("pointermove", this.handlePointerMove);
+    this.app.view.addEventListener("pointerup", this.handlePointerUp);
+    this.app.view.addEventListener("pointerout", this.handlePointerUp);
   }
 
   checkSliceCollisions(start, end) {
@@ -455,34 +431,52 @@ export default class FruitNinjaRenderer {
   }
 
   stop() {
-    // Stop the animation ticker
+    // Remove window resize listener
+    window.removeEventListener("resize", this.handleResize);
+
+    // Stop and destroy the PIXI application
     if (this.app) {
+      // Stop all animations and remove ticker
+      this.app.ticker.remove(this.updateParticlesHandler);
       this.app.ticker.stop();
+
+      // Remove all event listeners
+      if (this.app.view) {
+        this.app.view.removeEventListener("pointerdown", this.handlePointerDown);
+        this.app.view.removeEventListener("pointermove", this.handlePointerMove);
+        this.app.view.removeEventListener("pointerup", this.handlePointerUp);
+        this.app.view.removeEventListener("pointerout", this.handlePointerUp);
+      }
+
+      // Remove the canvas from DOM
+      const gameContainer = document.getElementById("gameContainer");
+      if (gameContainer && gameContainer.contains(this.app.view)) {
+        gameContainer.removeChild(this.app.view);
+      }
+
+      // Destroy the PIXI application
+      this.app.destroy(true, {
+        children: true,
+        texture: true,
+        baseTexture: true
+      });
+      this.app = null;
     }
 
-    // Clear all particles
-    if (this.particleContainer) {
-      this.particleContainer.removeChildren();
-    }
+    // Clear all references
+    this.graphics = null;
+    this.textContainer = null;
+    this.slicePath = null;
+    this.particleContainer = null;
     this.particles = [];
-
-    // Clear the slice path
-    if (this.slicePath) {
-      this.slicePath.clear();
-    }
-
-    // Clear all fruits
-    if (this.textContainer) {
-      this.textContainer.removeChildren();
-    }
-
-    // Clear the grid
-    if (this.graphics) {
-      this.graphics.clear();
-    }
-
-    // Reset data
     this.currentMatrix = null;
     this.fruitData.clear();
+
+    // Clear handlers
+    this.handlePointerDown = null;
+    this.handlePointerMove = null;
+    this.handlePointerUp = null;
+    this.updateParticlesHandler = null;
+    this.handleResize = null;
   }
 }
