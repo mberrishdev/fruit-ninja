@@ -80,7 +80,7 @@ export default class FruitNinjaRenderer {
     // });
 
     this.socket = io(
-      "http://ec2-18-195-72-62.eu-central-1.compute.amazonaws.com",
+      "https://socket.fruitninja.mberrishdev.me",
       {
         transports: ["websocket"],
         upgrade: false,
