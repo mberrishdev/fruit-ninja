@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderer.init(); // Initialize the game renderer
 
     // Start game timer
-    gameEndTime = data.endTime;
+    gameEndTime = data?.endTime || (Date.now() + 2 * 60 * 1000); // Default to 2 minutes if endTime not provided
     updateTimer();
   });
 

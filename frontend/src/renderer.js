@@ -141,19 +141,43 @@ export default class FruitNinjaRenderer {
       const pos = e.data.getLocalPosition(this.app.stage);
       lastPoint = pos;
       this.slicePath.clear();
-      this.slicePath.lineStyle(3, 0xffffff, 1);
+      
+      // Create gradient effect with multiple lines
+      // Base white line (thinnest)
+      this.slicePath.lineStyle(1, 0xffffff, 1);
       this.slicePath.moveTo(pos.x, pos.y);
-
-      // Add glow filter to slice path
-      const blurFilter = new PIXI.BlurFilter();
-      blurFilter.blur = 2;
-      this.slicePath.filters = [blurFilter];
+      
+      // Add blue glow
+      const glowFilter = new PIXI.BlurFilter();
+      glowFilter.blur = 3;
+      glowFilter.quality = 5;
+      
+      // Add bloom effect
+      const bloomFilter = new PIXI.ColorMatrixFilter();
+      bloomFilter.brightness(1.5, false);
+      
+      this.slicePath.filters = [glowFilter, bloomFilter];
+      
+      // Track the start point for the gradient
+      this.sliceStartPoint = { x: pos.x, y: pos.y };
     };
 
     const moveSlice = (e) => {
       if (!isSlicing) return;
 
       const pos = e.data.getLocalPosition(this.app.stage);
+      
+      // Clear previous line
+      this.slicePath.clear();
+      
+      // Draw the main thin white line
+      this.slicePath.lineStyle(1, 0xffffff, 1);
+      this.slicePath.moveTo(this.sliceStartPoint.x, this.sliceStartPoint.y);
+      this.slicePath.lineTo(pos.x, pos.y);
+      
+      // Draw blue glow line
+      this.slicePath.lineStyle(2, 0x00ffff, 0.3);
+      this.slicePath.moveTo(this.sliceStartPoint.x, this.sliceStartPoint.y);
       this.slicePath.lineTo(pos.x, pos.y);
 
       // Add particles along the slice path
@@ -165,10 +189,13 @@ export default class FruitNinjaRenderer {
           const x = lastPoint.x + (pos.x - lastPoint.x) * t;
           const y = lastPoint.y + (pos.y - lastPoint.y) * t;
 
-          // Create white particle for the main trail
-          this.createParticle(x, y, 0xffffff);
-          // Create blue particle for the glow effect
-          this.createParticle(x, y, 0x00ffff);
+          // Create fewer, more subtle particles
+          if (Math.random() < 0.3) { // Only create particles 30% of the time
+            // Create white particle for the main trail
+            this.createParticle(x, y, 0xffffff, 0.7);
+            // Create blue particle for the glow effect
+            this.createParticle(x, y, 0x00ffff, 0.4);
+          }
         }
 
         this.checkSliceCollisions(lastPoint, pos);
@@ -235,12 +262,9 @@ export default class FruitNinjaRenderer {
           (fruit.radius || 1) * this.CELL_SIZE
         )
       ) {
-        console.log("Sliced fruit:", fruit.name);
-        // Send slice event to backend with roomCode
         const roomCode = sessionStorage.getItem("roomCode");
         this.socket.emit("slice", { fruitId: fruit.id, roomCode });
 
-        // Create explosion particles
         const particleCount = 20;
         for (let i = 0; i < particleCount; i++) {
           this.createParticle(fruitPos.x, fruitPos.y, 0xffff00);
@@ -347,7 +371,7 @@ export default class FruitNinjaRenderer {
     const pixelY = y * this.CELL_SIZE + this.CELL_SIZE / 2;
 
     const baseFontSize = this.CELL_SIZE * 1.2;
-    const scaledFontSize = baseFontSize * (fruitData.radius || 1);
+    const scaledFontSize = baseFontSize * (fruitData?.radius || 1);
 
     const text = new PIXI.Text(symbol, {
       fontFamily: "Arial, sans-serif",
@@ -376,13 +400,13 @@ export default class FruitNinjaRenderer {
     }
   }
 
-  createParticle(x, y, color) {
+  createParticle(x, y, color, startAlpha = 1) {
     const particle = new PIXI.Graphics();
     particle.beginFill(color);
-    particle.drawCircle(0, 0, 2);
+    particle.drawCircle(0, 0, 1); // Smaller particles
     particle.endFill();
     particle.position.set(x, y);
-    particle.alpha = 1;
+    particle.alpha = startAlpha;
     particle.velocity = {
       x: (Math.random() - 0.5) * 5,
       y: (Math.random() - 0.5) * 5,

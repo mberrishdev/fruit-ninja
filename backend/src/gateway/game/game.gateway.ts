@@ -139,8 +139,8 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
       // Start the fruit worker for this room
       this.fruitWorker.startGameForRoom(room.code);
 
-      // Notify all players in the room
-      this.server.to(room.code).emit('game_started');
+      // Notify all players in the room with endTime
+      this.server.to(room.code).emit('game_started', { endTime: result.endTime });
       return { success: true };
     }
 
