@@ -10,7 +10,7 @@ async function bootstrap() {
     origin: [
       'https://fruitninja.mberrishdev.me',
       'http://localhost:3000',  // For local development
-      'http://localhost:5000'   // For local development
+      'http://localhost:5500'   // For local development
     ],
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type'],
