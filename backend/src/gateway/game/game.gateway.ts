@@ -10,7 +10,7 @@ import { GameEventsService } from '../../game/events/game-events.service';
 import { FruitWorkerService } from '../../game/fruit-worker/fruit-worker.service';
 import { OnModuleInit } from '@nestjs/common';
 
-@WebSocketGateway({ cors: true })
+@WebSocketGateway({ cors: false })
 export class GameGateway implements OnModuleInit {
   constructor(
     private readonly events: GameEventsService,
