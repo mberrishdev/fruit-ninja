@@ -34,11 +34,8 @@ export default class FruitNinjaRenderer {
     this.graphics = null;
     this.textContainer = null;
     this.currentMatrix = null;
-    this.fruitCount = 0;
     this.fruitData = new Map();
 
-    this.lastFrameTime = performance.now();
-    this.frameCount = 0;
     this.score = 0;
     this.particles = [];
   }
@@ -347,8 +344,6 @@ export default class FruitNinjaRenderer {
 
     this.graphics.clear();
     this.textContainer.removeChildren();
-    this.fruitCount = 0;
-
     this.drawGrid();
 
     for (let y = 0; y < this.MATRIX_SIZE; y++) {
@@ -360,8 +355,6 @@ export default class FruitNinjaRenderer {
         }
       }
     }
-
-    document.getElementById("fruitCount").textContent = this.fruitCount;
   }
 
   drawGrid() {
@@ -457,25 +450,7 @@ export default class FruitNinjaRenderer {
   }
 
   startRenderLoop() {
-    let frameCount = 0;
-    let lastFpsUpdate = performance.now();
-
-    // Use PIXI's ticker for smooth FPS calculation
-    this.app.ticker.add(() => {
-      frameCount++;
-
-      const now = performance.now();
-      const elapsed = now - lastFpsUpdate;
-
-      // Update FPS every 500ms
-      if (elapsed >= 500) {
-        const fps = Math.round((frameCount * 1000) / elapsed);
-        document.getElementById("fps").textContent = fps;
-
-        // Reset counters
-        frameCount = 0;
-        lastFpsUpdate = now;
-      }
-    });
+    // Start the PIXI ticker for animation
+    this.app.ticker.start();
   }
 }
