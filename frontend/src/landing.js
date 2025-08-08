@@ -15,6 +15,26 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Disable button while creating room
+    createRoomBtn.disabled = true;
+    createRoomBtn.textContent = 'Creating...';
+
+    // Check socket connection
+    if (!socket.connected) {
+      console.log('Socket not connected, attempting to connect...');
+      socket.connect();
+      await new Promise(resolve => {
+        const checkConnection = () => {
+          if (socket.connected) {
+            resolve();
+          } else {
+            setTimeout(checkConnection, 100);
+          }
+        };
+        checkConnection();
+      });
+    }
+
     socket.emit('create_room', { username }, (response) => {
       if (response.success) {
         // Store data in sessionStorage
@@ -25,7 +45,16 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.replace('./game.html');
       } else {
         alert(response.error || 'Failed to create room');
+        // Re-enable button on failure
+        createRoomBtn.disabled = false;
+        createRoomBtn.textContent = 'Create Room';
       }
+    }).catch(error => {
+      console.error('Room creation error:', error);
+      alert('Failed to create room. Please try again.');
+      // Re-enable button on error
+      createRoomBtn.disabled = false;
+      createRoomBtn.textContent = 'Create Room';
     });
   });
 

@@ -41,31 +41,48 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
     });
   }
 
+  private disconnectTimers: Map<string, NodeJS.Timeout> = new Map();
+
   handleDisconnect(client: Socket) {
-    setTimeout(() => {
-      const room = this.roomService.getRoomBySocket(client);
-      if (room) {
-        if (room.players.has(client.id)) {
-          const players = Array.from(room.players.values())
-            .filter((p) => p.id !== client.id)
-            .map((p) => ({
-              id: p.id,
-              username: p.username,
-              isOwner: p.isOwner,
-            }));
+    // Clear any existing disconnect timer for this client
+    const existingTimer = this.disconnectTimers.get(client.id);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+      this.disconnectTimers.delete(client.id);
+    }
 
-          this.roomService.leaveRoom(client);
+    const room = this.roomService.getRoomBySocket(client);
+    if (!room) return;
 
-          // Notify remaining players about the disconnection
-          if (players.length > 0) {
-            console.log('player_joined', players);
-            this.server.to(room.code).emit('player_joined', { players });
-          }
-        } else {
-          console.log(`Player ${client.id} has already reconnected`);
+    console.log(`Socket ${client.id} disconnected, starting grace period...`);
+
+    // Set a new disconnect timer
+    const timer = setTimeout(() => {
+      if (room.players.has(client.id)) {
+        console.log(`Grace period ended for ${client.id}, removing from room ${room.code}`);
+        
+        const players = Array.from(room.players.values())
+          .filter((p) => p.id !== client.id)
+          .map((p) => ({
+            id: p.id,
+            username: p.username,
+            isOwner: p.isOwner,
+          }));
+
+        this.roomService.leaveRoom(client);
+        this.disconnectTimers.delete(client.id);
+
+        // Notify remaining players about the disconnection
+        if (players.length > 0) {
+          console.log('Notifying remaining players:', players);
+          this.server.to(room.code).emit('player_joined', { players });
         }
+      } else {
+        console.log(`Player ${client.id} has already reconnected`);
       }
-    }, 500);
+    }, 2000); // Increased to 2 seconds
+
+    this.disconnectTimers.set(client.id, timer);
   }
 
   @SubscribeMessage('create_room')
@@ -79,6 +96,14 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
 
   @SubscribeMessage('join_room')
   handleJoinRoom(client: Socket, data: JoinRoomDto) {
+    // Clear any pending disconnect timer for this client
+    const existingTimer = this.disconnectTimers.get(client.id);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+      this.disconnectTimers.delete(client.id);
+      console.log(`Cleared disconnect timer for rejoining client ${client.id}`);
+    }
+
     const result = this.roomService.joinRoom(
       client,
       data.roomCode,
@@ -88,13 +113,17 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
     if (result.success && result.players) {
       // Only broadcast for new joins, not rejoin attempts
       if (!data.isRejoin) {
+        console.log(`New player ${client.id} joined room ${data.roomCode}`);
         this.server.to(data.roomCode).emit('player_joined', {
           players: result.players,
         });
+      } else {
+        console.log(`Player ${client.id} rejoined room ${data.roomCode}`);
       }
       return { success: true, players: result.players };
     }
 
+    console.log(`Failed to join room: ${result.error}`);
     return { success: false, error: result.error };
   }
 

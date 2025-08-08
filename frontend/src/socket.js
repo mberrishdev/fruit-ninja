@@ -3,16 +3,20 @@ let socket = null;
 
 export function getSocket() {
   if (!socket) {
-    //socket = io("http://localhost:3000", {
-    socket = io("https://socket.fruitninja.mberrishdev.me", {
+    socket = io("http://localhost:3000", {
+      // socket = io("https://socket.fruitninja.mberrishdev.me", {
       transports: ["websocket"],
       upgrade: false,
       secure: false,
-      // Add reconnection options
+      // Enhanced reconnection options
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5,
+      reconnectionDelay: 100,
+      reconnectionDelayMax: 1000,
+      reconnectionAttempts: 10,
+      timeout: 10000,
+      // Keep alive with ping
+      pingInterval: 2000,
+      pingTimeout: 5000,
       // Prevent auto connect
       autoConnect: false,
     });
