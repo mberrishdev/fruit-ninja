@@ -78,6 +78,12 @@
             padding: 15px;
             margin: 10px 0;
             border-radius: 5px;
+            transition: transform 0.2s ease;
+        }
+
+        .room-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .room-header {
@@ -166,22 +172,24 @@
             return `<div class="stat"><span>${label}</span><span>${value}</span></div>`;
         }
 
-        function formatRoomCard(roomCode, stats) {
+        function formatRoomCard(roomCode, roomData) {
             return `
                 <div class="room-card">
                     <div class="room-header">
                         <strong>Room: ${roomCode}</strong>
-                        <span>${stats.totalFruits} fruits</span>
-                    </div>
-                    <div>
-                        ${Object.entries(stats.fruitsByType)
-                            .map(([fruit, count]) => 
-                                `<span class="fruit-type">${fruit}: ${count}</span>`
-                            ).join('')}
+                        <span>${roomData.players.length} players</span>
                     </div>
                     <div class="stat">
-                        <span>Average Speed</span>
-                        <span>${stats.averageSpeed.toFixed(2)}</span>
+                        <span>Game Status</span>
+                        <span>${roomData.isGameStarted ? '🎮 In Progress' : '⏳ Waiting'}</span>
+                    </div>
+                    <div>
+                        ${roomData.players.map(player => `
+                            <div class="stat">
+                                <span>${player.username} ${player.isOwner ? '👑' : ''}</span>
+                                <span>Score: ${player.score}</span>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;
@@ -217,7 +225,8 @@
 
                 // Game Status
                 document.getElementById('gameStats').innerHTML = `
-                    ${formatStat('Active Rooms', data.game.rooms.activeRooms)}
+                    ${formatStat('Active Rooms', data.game.gameRooms.totalRooms)}
+                    ${formatStat('Active Games', data.game.gameRooms.activeGames)}
                     ${formatStat('Total Fruits', data.game.rooms.totalFruits)}
                     ${formatStat('Game Status', data.game.gameStatus)}
                     ${formatStat('Last Update', new Date(data.game.lastUpdate).toLocaleString())}
@@ -232,10 +241,38 @@
                 `;
 
                 // Room Stats
-                document.getElementById('roomStats').innerHTML = 
-                    Object.entries(data.game.rooms.roomStats)
-                        .map(([roomCode, stats]) => formatRoomCard(roomCode, stats))
-                        .join('') || '<div class="stat">No active rooms</div>';
+                const roomsHtml = Object.entries(data.game.gameRooms.rooms)
+                    .map(([roomCode, roomData]) => formatRoomCard(roomCode, roomData))
+                    .join('');
+
+                document.getElementById('roomStats').innerHTML = roomsHtml || '<div class="stat">No active rooms</div>';
+
+                // Add fruit stats if available
+                if (data.game.rooms.roomStats && Object.keys(data.game.rooms.roomStats).length > 0) {
+                    document.getElementById('roomStats').innerHTML += `
+                        <h3 style="margin-top: 20px; color: #ffd700;">Fruit Statistics</h3>
+                        ${Object.entries(data.game.rooms.roomStats).map(([roomCode, stats]) => `
+                            <div class="room-card">
+                                <div class="room-header">
+                                    <strong>Room: ${roomCode}</strong>
+                                    <span>${stats.totalFruits} fruits</span>
+                                </div>
+                                <div>
+                                    ${Object.entries(stats.fruitsByType || {})
+                                        .map(([fruit, count]) => 
+                                            `<span class="fruit-type">${fruit}: ${count}</span>`
+                                        ).join('')}
+                                </div>
+                                ${stats.averageSpeed !== undefined ? `
+                                    <div class="stat">
+                                        <span>Average Speed</span>
+                                        <span>${stats.averageSpeed.toFixed(2)}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    `;
+                }
 
                 // Highlight updated cards
                 ['systemCard', 'memoryCard', 'gameCard', 'endpointsCard'].forEach(highlightCard);
