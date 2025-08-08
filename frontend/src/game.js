@@ -125,13 +125,52 @@ document.addEventListener("DOMContentLoaded", () => {
     // Show game over modal
     const modal = document.createElement("div");
     modal.className = "game-over-modal";
+    
+    // Get top 3 players
+    const [first, second, third] = leaderboard;
+    
     modal.innerHTML = `
       <div class="game-over-content">
         <h2>Game Over!</h2>
-        <div class="winner">
-          🏆 Winner: ${winner.username} (${winner.score} points)
+        
+        <div class="podium">
+          ${second ? `
+            <div class="podium-place second">
+              <div class="podium-player">
+                <div class="crown">🥈</div>
+                <div class="avatar">👤</div>
+                <div class="name">${second.username}</div>
+                <div class="score">${second.score}</div>
+              </div>
+              <div class="podium-block">2</div>
+            </div>
+          ` : ''}
+          
+          <div class="podium-place first">
+            <div class="podium-player">
+              <div class="crown">👑</div>
+              <div class="avatar">👤</div>
+              <div class="name">${first.username}</div>
+              <div class="score">${first.score}</div>
+            </div>
+            <div class="podium-block">1</div>
+          </div>
+          
+          ${third ? `
+            <div class="podium-place third">
+              <div class="podium-player">
+                <div class="crown">🥉</div>
+                <div class="avatar">👤</div>
+                <div class="name">${third.username}</div>
+                <div class="score">${third.score}</div>
+              </div>
+              <div class="podium-block">3</div>
+            </div>
+          ` : ''}
         </div>
+
         <div class="final-leaderboard">
+          <h3>Final Scores</h3>
           ${leaderboard
             .map(
               (player, index) => `
@@ -146,6 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
             )
             .join("")}
         </div>
+        
         ${
           isOwner
             ? '<button class="btn restart-btn">Start New Game</button>'

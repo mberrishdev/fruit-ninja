@@ -453,4 +453,36 @@ export default class FruitNinjaRenderer {
     // Start the PIXI ticker for animation
     this.app.ticker.start();
   }
+
+  stop() {
+    // Stop the animation ticker
+    if (this.app) {
+      this.app.ticker.stop();
+    }
+
+    // Clear all particles
+    if (this.particleContainer) {
+      this.particleContainer.removeChildren();
+    }
+    this.particles = [];
+
+    // Clear the slice path
+    if (this.slicePath) {
+      this.slicePath.clear();
+    }
+
+    // Clear all fruits
+    if (this.textContainer) {
+      this.textContainer.removeChildren();
+    }
+
+    // Clear the grid
+    if (this.graphics) {
+      this.graphics.clear();
+    }
+
+    // Reset data
+    this.currentMatrix = null;
+    this.fruitData.clear();
+  }
 }
