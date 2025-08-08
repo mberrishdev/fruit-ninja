@@ -6,12 +6,16 @@ interface Player {
   username: string;
   socket: Socket;
   isOwner: boolean;
+  score: number;
 }
 
 interface Room {
   code: string;
   players: Map<string, Player>;
   isGameStarted: boolean;
+  gameStartTime?: number;
+  gameTimer?: NodeJS.Timeout;
+  gameEndTime?: number;
 }
 
 @Injectable()
@@ -57,7 +61,8 @@ export class RoomService {
       id: socket.id,
       username,
       socket,
-      isOwner: true
+      isOwner: true,
+      score: 0
     };
 
     room.players.set(socket.id, player);
@@ -87,7 +92,8 @@ export class RoomService {
       id: socket.id,
       username,
       socket,
-      isOwner: false
+      isOwner: false,
+      score: 0
     };
 
     room.players.set(socket.id, player);
@@ -105,7 +111,8 @@ export class RoomService {
 
   startGame(socket: Socket, roomCode: string): { 
     success: boolean; 
-    error?: string 
+    error?: string;
+    endTime?: number;
   } {
     const room = this.rooms.get(roomCode);
     
@@ -118,8 +125,52 @@ export class RoomService {
       return { success: false, error: 'Only room owner can start the game' };
     }
 
+    // Reset all player scores
+    room.players.forEach(p => p.score = 0);
+
+    // Set game timing
+    const GAME_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds
+    room.gameStartTime = Date.now();
+    room.gameEndTime = room.gameStartTime + GAME_DURATION;
     room.isGameStarted = true;
-    return { success: true };
+
+    // Set timer to end game
+    room.gameTimer = setTimeout(() => {
+      this.endGame(roomCode);
+    }, GAME_DURATION);
+
+    return { 
+      success: true,
+      endTime: room.gameEndTime
+    };
+  }
+
+  private endGame(roomCode: string): void {
+    const room = this.rooms.get(roomCode);
+    if (!room) return;
+
+    room.isGameStarted = false;
+    if (room.gameTimer) {
+      clearTimeout(room.gameTimer);
+      room.gameTimer = undefined;
+    }
+
+    // Get final leaderboard
+    const finalLeaderboard = Array.from(room.players.values())
+      .map(p => ({
+        username: p.username,
+        score: p.score,
+        isOwner: p.isOwner
+      }))
+      .sort((a, b) => b.score - a.score);
+
+    // Notify all players about game end
+    room.players.forEach(p => {
+      p.socket.emit('game:end', { 
+        leaderboard: finalLeaderboard,
+        winner: finalLeaderboard[0]
+      });
+    });
   }
 
   leaveRoom(socket: Socket): void {
@@ -166,5 +217,29 @@ export class RoomService {
       }
     }
     return undefined;
+  }
+
+  updatePlayerScore(roomCode: string, playerId: string, score: number): void {
+    const room = this.rooms.get(roomCode);
+    if (!room) return;
+
+    const player = room.players.get(playerId);
+    if (!player) return;
+
+    player.score += score;
+
+    // Get sorted leaderboard
+    const leaderboard = Array.from(room.players.values())
+      .map(p => ({
+        username: p.username,
+        score: p.score,
+        isOwner: p.isOwner
+      }))
+      .sort((a, b) => b.score - a.score);
+
+    // Broadcast leaderboard update to all players in room
+    room.players.forEach(p => {
+      p.socket.emit('leaderboard:update', { leaderboard });
+    });
   }
 }

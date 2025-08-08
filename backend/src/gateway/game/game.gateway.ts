@@ -125,6 +125,8 @@ export class GameGateway implements OnGatewayDisconnect, OnModuleInit {
 
     const score = this.fruitWorker.sliceFruit(room.code, payload.fruitId);
     if (score > 0) {
+      // Update player's score and broadcast leaderboard
+      this.roomService.updatePlayerScore(room.code, client.id, score);
       // Broadcast score through events service
       this.events.broadcastScore(score, room.code);
     }

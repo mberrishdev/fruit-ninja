@@ -60,6 +60,18 @@ h1 {
   transform: translateY(-2px);
 }
 
+.health-btn {
+  background: #2196f3;
+  text-decoration: none;
+  text-align: center;
+  display: block;
+  margin-top: 10px;
+}
+
+.health-btn:hover {
+  background: #1976d2;
+}
+
 .divider {
   margin: 1rem 0;
   opacity: 0.7;
@@ -198,6 +210,60 @@ h1 {
   font-size: 12px;
   z-index: 1000;
   backdrop-filter: blur(5px);
+}
+
+#leaderboard {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  color: white;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  min-width: 200px;
+}
+
+#leaderboard h3 {
+  margin: 0 0 10px 0;
+  color: #ffd700;
+  text-align: center;
+  font-size: 16px;
+}
+
+.leaderboard-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard-item:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-item.current-player {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.leaderboard-item.owner {
+  color: #ffd700;
+}
+
+.leaderboard-rank {
+  margin-right: 10px;
+  opacity: 0.7;
+  min-width: 20px;
+}
+
+.leaderboard-score {
+  font-family: monospace;
+  min-width: 60px;
+  text-align: right;
 }
 
 /* Score animation */
