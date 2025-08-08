@@ -173,4 +173,55 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "./landing.html";
     }
   });
+
+
+  function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      padding: 12px 24px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      color: white;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s ease-in;
+      display: flex;
+      align-items: center;
+      min-width: 200px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+    `;
+
+    // Set background color based on type
+    const colors = {
+      error: '#ef4444',
+      success: '#22c55e',
+      info: '#3b82f6',
+      warning: '#f59e0b'
+    };
+    toast.style.backgroundColor = colors[type] || colors.info;
+
+    // Add icon based on type
+    const icons = {
+      error: '❌',
+      success: '✅',
+      info: 'ℹ️',
+      warning: '⚠️'
+    };
+    toast.innerHTML = `
+      <span style="margin-right: 8px;">${icons[type]}</span>
+      <span style="flex-grow: 1;">${message}</span>
+    `;
+
+    toastContainer.appendChild(toast);
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+    });
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => {
+        toastContainer.removeChild(toast);
+      }, 300);
+    }, 3000);
+  }
 });
